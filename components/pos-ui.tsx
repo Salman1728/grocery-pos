@@ -94,59 +94,61 @@ export function PosUI() {
   const total = Math.max(0, subtotal - discount) + vat;
 
   return (
-    <main className="min-h-screen flex-1 overflow-hidden bg-[radial-gradient(circle_at_top_left,#dff7e8,transparent_35%),linear-gradient(135deg,#fbf7ef,#fffaf3)]">
-      <header className="sticky top-0 z-20 border-b bg-white/70 px-6 py-5 backdrop-blur-xl">
-        <div className="flex items-center justify-between gap-5">
-          <div>
-            <p className="text-sm font-bold text-emerald-700">
-              Premium Grocery POS
-            </p>
-            <h1 className="text-3xl font-black tracking-tight text-[#063d29]">
-              Checkout Counter
-            </h1>
-          </div>
+    <main className="min-h-screen flex-1 bg-[#f6f8f5]">
+      <section className="grid min-h-screen gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_390px]">
+        <div className="min-w-0">
+          <header className="mb-5 rounded-[2rem] border bg-white p-5 shadow-sm">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+              <div>
+                <p className="text-sm font-bold text-emerald-700">
+                  GreenMart Grocery POS
+                </p>
+                <h1 className="text-3xl font-black tracking-tight text-[#0f3d2e]">
+                  Checkout Counter
+                </h1>
+              </div>
 
-          <div className="relative hidden w-full max-w-xl md:block">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search product or scan barcode..."
-              className="h-14 rounded-2xl bg-white pl-12 text-base shadow-sm"
-            />
-          </div>
+              <div className="flex flex-1 items-center gap-3 xl:max-w-2xl">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search product or scan barcode..."
+                    className="h-14 rounded-2xl bg-[#f8faf7] pl-12 text-base"
+                  />
+                </div>
 
-          <Button variant="outline" size="icon" className="h-12 w-12 rounded-2xl">
-            <Bell size={20} />
-          </Button>
-        </div>
-      </header>
+                <Button variant="outline" size="icon" className="h-14 w-14 rounded-2xl">
+                  <Bell size={20} />
+                </Button>
+              </div>
+            </div>
+          </header>
 
-      <section className="grid gap-6 p-6 xl:grid-cols-[1fr_430px]">
-        <div>
-          <div className="mb-6 grid gap-4 md:grid-cols-4">
+          <div className="mb-5 grid gap-4 md:grid-cols-4">
             {[
               ["Today Sales", "KES 48,250"],
               ["Orders", "126"],
               ["Items Sold", "342"],
               ["Low Stock", "3"],
             ].map(([label, value]) => (
-              <Card key={label} className="rounded-3xl border-0 bg-white/80 shadow-sm backdrop-blur">
+              <Card key={label} className="rounded-3xl border-0 bg-white shadow-sm">
                 <CardContent className="p-5">
                   <p className="text-sm font-medium text-muted-foreground">{label}</p>
-                  <p className="mt-2 text-2xl font-black text-[#063d29]">{value}</p>
+                  <p className="mt-2 text-2xl font-black text-[#0f3d2e]">{value}</p>
                 </CardContent>
               </Card>
             ))}
           </div>
 
           <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-            <TabsList className="mb-6 h-auto flex-wrap justify-start rounded-3xl bg-white/80 p-2 shadow-sm">
+            <TabsList className="mb-5 h-auto flex-wrap justify-start rounded-3xl bg-white p-2 shadow-sm">
               {categories.map((category) => (
                 <TabsTrigger
                   key={category}
                   value={category}
-                  className="rounded-2xl px-5 py-3 font-bold data-[state=active]:bg-[#063d29] data-[state=active]:text-white"
+                  className="rounded-2xl px-5 py-3 font-bold data-[state=active]:bg-[#0f3d2e] data-[state=active]:text-white"
                 >
                   {category}
                 </TabsTrigger>
@@ -154,52 +156,48 @@ export function PosUI() {
             </TabsList>
           </Tabs>
 
-          <div className="grid gap-5 sm:grid-cols-2 2xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
             {filteredProducts.map((product, index) => (
               <motion.button
                 key={product.id}
-                initial={{ opacity: 0, y: 18 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.04 }}
-                whileHover={{ y: -6, scale: 1.01 }}
+                transition={{ delay: index * 0.035 }}
+                whileHover={{ y: -4 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => addToCart(product)}
                 className="text-left"
               >
-                <Card className="overflow-hidden rounded-[2rem] border-0 bg-white shadow-sm transition hover:shadow-2xl">
+                <Card className="overflow-hidden rounded-[2rem] border-0 bg-white shadow-sm transition hover:shadow-xl">
                   <div
-                    className="relative h-44 bg-cover bg-center"
+                    className="relative h-40 bg-cover bg-center"
                     style={{
-                      backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.25)), url(${productImages[product.name]})`,
+                      backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.02), rgba(0,0,0,0.25)), url(${productImages[product.name]})`,
                     }}
                   >
-                    <Badge className="absolute right-4 top-4 rounded-full bg-white text-[#063d29] hover:bg-white">
+                    <Badge className="absolute right-3 top-3 rounded-full bg-white text-[#0f3d2e] hover:bg-white">
                       {product.stock} stock
                     </Badge>
-                    <div className="absolute bottom-4 left-4 grid h-12 w-12 place-items-center rounded-2xl bg-white/90 text-2xl shadow">
-                      {product.emoji}
-                    </div>
                   </div>
 
                   <CardContent className="p-5">
-                    <div className="flex items-end justify-between">
+                    <div className="flex items-start justify-between gap-4">
                       <div>
-                        <h3 className="text-xl font-black text-[#063d29]">
+                        <h3 className="text-xl font-black text-[#0f3d2e]">
                           {product.name}
                         </h3>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="mt-1 text-sm text-muted-foreground">
                           {product.category} · {product.unit}
+                        </p>
+                        <p className="mt-4 text-2xl font-black">
+                          {money(product.price)}
                         </p>
                       </div>
 
-                      <Button size="icon" className="rounded-2xl bg-[#063d29]">
+                      <Button size="icon" className="rounded-2xl bg-[#0f3d2e] hover:bg-[#0b2e23]">
                         <Plus size={18} />
                       </Button>
                     </div>
-
-                    <p className="mt-5 text-2xl font-black">
-                      {money(product.price)}
-                    </p>
                   </CardContent>
                 </Card>
               </motion.button>
@@ -208,14 +206,14 @@ export function PosUI() {
         </div>
 
         <motion.aside
-          initial={{ opacity: 0, x: 30 }}
+          initial={{ opacity: 0, x: 24 }}
           animate={{ opacity: 1, x: 0 }}
-          className="sticky top-28 h-[calc(100vh-8rem)] rounded-[2rem] border bg-white/85 shadow-2xl backdrop-blur-xl"
+          className="sticky top-5 h-[calc(100vh-2.5rem)] overflow-hidden rounded-[2rem] border bg-white shadow-2xl"
         >
-          <div className="flex items-center justify-between p-6">
+          <div className="flex items-center justify-between p-5">
             <div>
               <p className="text-sm font-bold text-emerald-700">Current Order</p>
-              <h2 className="text-2xl font-black text-[#063d29]">
+              <h2 className="text-2xl font-black text-[#0f3d2e]">
                 Cart ({cart.length})
               </h2>
             </div>
@@ -232,10 +230,10 @@ export function PosUI() {
 
           <Separator />
 
-          <ScrollArea className="h-[330px] px-6 py-4">
-            <div className="space-y-4">
+          <ScrollArea className="h-[38vh] px-5 py-4">
+            <div className="space-y-3">
               {cart.length === 0 ? (
-                <div className="rounded-3xl bg-[#faf6ee] p-8 text-center text-muted-foreground">
+                <div className="rounded-3xl bg-[#f6f8f5] p-8 text-center text-muted-foreground">
                   Cart is empty.
                 </div>
               ) : (
@@ -243,17 +241,17 @@ export function PosUI() {
                   <motion.div
                     key={item.id}
                     layout
-                    className="flex items-center gap-4 rounded-3xl bg-[#faf6ee] p-3"
+                    className="flex items-center gap-3 rounded-3xl bg-[#f6f8f5] p-3"
                   >
                     <div
-                      className="h-16 w-16 rounded-2xl bg-cover bg-center"
+                      className="h-14 w-14 shrink-0 rounded-2xl bg-cover bg-center"
                       style={{
                         backgroundImage: `url(${productImages[item.name]})`,
                       }}
                     />
 
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-black text-[#063d29]">
+                      <p className="truncate font-black text-[#0f3d2e]">
                         {item.name}
                       </p>
                       <p className="text-sm text-muted-foreground">
@@ -286,8 +284,8 @@ export function PosUI() {
             </div>
           </ScrollArea>
 
-          <div className="p-6">
-            <div className="rounded-3xl bg-[#063d29] p-5 text-white">
+          <div className="p-5">
+            <div className="rounded-3xl bg-[#0f3d2e] p-5 text-white">
               <div className="mb-3 flex justify-between text-sm">
                 <span className="text-white/60">Subtotal</span>
                 <strong>{money(subtotal)}</strong>
@@ -316,19 +314,19 @@ export function PosUI() {
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-3">
-              <Button variant="outline" className="h-16 rounded-2xl">
-                <Wallet className="mr-1" size={18} /> Cash
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <Button variant="outline" className="h-14 rounded-2xl text-xs">
+                <Wallet className="mr-1" size={16} /> Cash
               </Button>
-              <Button variant="outline" className="h-16 rounded-2xl">
-                <Smartphone className="mr-1" size={18} /> M-Pesa
+              <Button variant="outline" className="h-14 rounded-2xl text-xs">
+                <Smartphone className="mr-1" size={16} /> M-Pesa
               </Button>
-              <Button variant="outline" className="h-16 rounded-2xl">
-                <CreditCard className="mr-1" size={18} /> Card
+              <Button variant="outline" className="h-14 rounded-2xl text-xs">
+                <CreditCard className="mr-1" size={16} /> Card
               </Button>
             </div>
 
-            <Button className="mt-4 h-16 w-full rounded-3xl bg-[#7ac943] text-lg font-black text-[#063d29] hover:bg-[#6bbb38]">
+            <Button className="mt-4 h-16 w-full rounded-3xl bg-[#22c55e] text-lg font-black text-[#052e16] hover:bg-[#16a34a]">
               Complete Sale
             </Button>
           </div>
