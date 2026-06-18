@@ -1,11 +1,10 @@
-import { Sidebar } from "@/components/sidebar";
+import { AppShell } from "@/components/app-shell";
 import { PosUI } from "@/components/pos-ui";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen bg-[#faf6ee]">
-      <Sidebar />
+    <AppShell>
       <PosUI />
-    </div>
+    </AppShell>
   );
 }
