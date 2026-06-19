@@ -1,135 +1,117 @@
-import { AppShell } from "@/components/app-shell";
-import { PageHeader } from "@/components/page-header";
-import { StatCard } from "@/components/stat-card";
-import { products } from "@/lib/mock-data";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Search,
-  SlidersHorizontal,
-  Download,
-  AlertTriangle,
-} from "lucide-react";
+import { AlertTriangle, Boxes, PackageCheck, Truck } from "lucide-react";
+import { inventoryRows } from "@/lib/flexpos-data";
+
+const inventoryStats = [
+  {
+    label: "Low Stock",
+    value: "18",
+    note: "Needs reorder",
+    icon: AlertTriangle,
+  },
+  {
+    label: "Expiring Soon",
+    value: "7",
+    note: "Food & pharmacy",
+    icon: PackageCheck,
+  },
+  {
+    label: "Inventory Value",
+    value: "KES 1.8M",
+    note: "Across branches",
+    icon: Boxes,
+  },
+  {
+    label: "Suppliers",
+    value: "42",
+    note: "Active suppliers",
+    icon: Truck,
+  },
+];
 
 export default function InventoryPage() {
-  const lowStock = products.filter((product) => product.stock < 45);
-
   return (
-    <AppShell>
-      <PageHeader
-        eyebrow="Stock Control"
-        title="Inventory"
-        description="Monitor stock levels, low-stock items, and product movement."
-        action={
-          <Button className="rounded-2xl bg-[#22c55e] font-black text-[#052e16] hover:bg-[#16a34a]">
-            <Download size={18} />
-            Export
-          </Button>
-        }
-      />
-
-      <div className="mb-5 grid gap-4 md:grid-cols-4">
-        <StatCard label="Total SKUs" value={`${products.length}`} />
-        <StatCard label="Total Stock" value={`${products.reduce((a, p) => a + p.stock, 0)}`} />
-        <StatCard label="Low Stock" value={`${lowStock.length}`} />
-        <StatCard label="Categories" value="7" />
-      </div>
-
-      <Card className="mb-5 rounded-[2rem] border-0 bg-white shadow-sm">
-        <CardContent className="flex gap-3 p-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
-            <Input
-              placeholder="Search inventory by product, category, or stock status..."
-              className="h-14 rounded-2xl bg-[#f6f8f5] pl-12"
-            />
+    <main className="min-h-screen bg-slate-50 p-6">
+      <div className="mx-auto max-w-[1600px]">
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.3em] text-emerald-700">
+              FlexPOS
+            </p>
+            <h1 className="mt-2 text-4xl font-black tracking-tight text-slate-950">
+              Inventory Control
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm text-slate-500">
+              Track stock, expiry dates, suppliers, purchase orders, branch
+              transfers, and reorder alerts.
+            </p>
           </div>
 
-          <Button variant="outline" className="h-14 rounded-2xl">
-            <SlidersHorizontal size={18} />
-            Filter
-          </Button>
-        </CardContent>
-      </Card>
+          <div className="flex gap-3">
+            <button className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm">
+              Transfer Stock
+            </button>
+            <button className="rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm">
+              Receive Stock
+            </button>
+          </div>
+        </div>
 
-      {lowStock.length > 0 && (
-        <Card className="mb-5 rounded-[2rem] border-0 bg-amber-50 shadow-sm">
-          <CardContent className="flex items-center gap-3 p-5 text-amber-800">
-            <AlertTriangle size={22} />
-            <div>
-              <p className="font-black">Low stock alert</p>
-              <p className="text-sm">
-                {lowStock.map((item) => item.name).join(", ")} need restocking soon.
-              </p>
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {inventoryStats.map((stat) => {
+            const Icon = stat.icon;
+
+            return (
+              <article
+                key={stat.label}
+                className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
+              >
+                <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-700 w-fit">
+                  <Icon className="h-6 w-6" />
+                </div>
+
+                <p className="mt-6 text-sm font-semibold text-slate-500">
+                  {stat.label}
+                </p>
+                <h2 className="mt-2 text-3xl font-black text-slate-950">
+                  {stat.value}
+                </h2>
+                <p className="mt-2 text-xs font-bold text-emerald-700">
+                  {stat.note}
+                </p>
+              </article>
+            );
+          })}
+        </section>
+
+        <section className="mt-6 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+          <div className="grid grid-cols-[1.2fr_0.7fr_1fr_0.8fr_0.8fr_0.9fr_0.7fr] border-b border-slate-200 bg-slate-50 px-6 py-4 text-xs font-black uppercase tracking-wide text-slate-500">
+            <span>Product</span>
+            <span>SKU</span>
+            <span>Branch</span>
+            <span>Available</span>
+            <span>Reorder</span>
+            <span>Expiry</span>
+            <span>Action</span>
+          </div>
+
+          {inventoryRows.map((row) => (
+            <div
+              key={row.sku}
+              className="grid grid-cols-[1.2fr_0.7fr_1fr_0.8fr_0.8fr_0.9fr_0.7fr] items-center border-b border-slate-100 px-6 py-5 text-sm last:border-b-0"
+            >
+              <span className="font-black text-slate-950">{row.product}</span>
+              <span className="font-bold text-slate-500">{row.sku}</span>
+              <span className="font-bold text-slate-600">{row.branch}</span>
+              <span className="font-black text-emerald-700">{row.available}</span>
+              <span className="font-bold text-slate-600">{row.reorder}</span>
+              <span className="font-bold text-slate-600">{row.expiry}</span>
+              <button className="w-fit rounded-full bg-slate-950 px-3 py-1 text-xs font-black text-white">
+                Adjust
+              </button>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <Card className="overflow-hidden rounded-[2rem] border-0 bg-white shadow-sm">
-        <CardContent className="p-0">
-          <table className="w-full text-left">
-            <thead className="bg-[#eef7f0] text-[#0f3d2e]">
-              <tr>
-                <th className="p-5">Product</th>
-                <th className="p-5">Category</th>
-                <th className="p-5">Unit</th>
-                <th className="p-5">Stock</th>
-                <th className="p-5">Value</th>
-                <th className="p-5">Status</th>
-                <th className="p-5">Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {products.map((product) => {
-                const isLow = product.stock < 45;
-
-                return (
-                  <tr key={product.id} className="border-t border-black/5">
-                    <td className="p-5">
-                      <div className="flex items-center gap-3">
-                        <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#edf7ef] text-2xl">
-                          {product.emoji}
-                        </div>
-                        <div>
-                          <p className="font-black text-[#0f3d2e]">{product.name}</p>
-                          <p className="text-sm text-muted-foreground">SKU-{product.id.toString().padStart(4, "0")}</p>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="p-5 text-muted-foreground">{product.category}</td>
-                    <td className="p-5">{product.unit}</td>
-                    <td className="p-5 font-black">{product.stock}</td>
-                    <td className="p-5 font-bold">KES {(product.stock * product.price).toLocaleString()}</td>
-
-                    <td className="p-5">
-                      <Badge
-                        className={
-                          isLow
-                            ? "rounded-full bg-amber-100 text-amber-800 hover:bg-amber-100"
-                            : "rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
-                        }
-                      >
-                        {isLow ? "Low stock" : "Healthy"}
-                      </Badge>
-                    </td>
-
-                    <td className="p-5">
-                      <Button variant="outline" className="rounded-2xl">
-                        Restock
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
-    </AppShell>
+          ))}
+        </section>
+      </div>
+    </main>
   );
 }
