@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { FlexposSidebar } from "@/components/flexpos-sidebar";
 import "./globals.css";
 
 const inter = Inter({
@@ -7,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "GreenMart POS",
-  description: "Premium Grocery POS System",
+  title: "FlexPOS",
+  description: "Multi-purpose POS platform for grocery, cafe, retail, pharmacy, and service businesses",
 };
 
 export default function RootLayout({
@@ -18,7 +19,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <FlexposSidebar />
+        <div className="lg:pl-72">{children}</div>
+      </body>
     </html>
   );
 }
