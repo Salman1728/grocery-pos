@@ -10,6 +10,9 @@ import {
   Smartphone,
   Users,
 } from "lucide-react";
+import { FlexposPageShell } from "@/components/flexpos-page-shell";
+import { FlexposCard } from "@/components/flexpos-card";
+import { FlexposButton } from "@/components/flexpos-button";
 
 const settingsSections = [
   {
@@ -50,110 +53,98 @@ const settingsSections = [
   },
 ];
 
+const hardwareSections = [
+  {
+    title: "Hardware Setup",
+    description:
+      "Connect barcode scanners, receipt printers, cash drawers, and weighing scales.",
+    icon: Printer,
+  },
+  {
+    title: "Mobile POS",
+    description:
+      "Tablet and phone cashier mode for restaurants, salons, and pop-up shops.",
+    icon: Smartphone,
+  },
+  {
+    title: "Offline Mode",
+    description:
+      "Keep selling even when internet is unstable, then sync later.",
+    icon: Lock,
+  },
+];
+
 export default function SettingsPage() {
   return (
-    <main className="min-h-screen bg-slate-50 p-6">
-      <div className="mx-auto max-w-[1600px]">
-        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-emerald-700">
-              FlexPOS
-            </p>
-            <h1 className="mt-2 text-4xl font-black tracking-tight text-slate-950">
-              Settings
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm text-slate-500">
-              Configure your multi-purpose POS for grocery, café, retail,
-              pharmacy, salon, and service businesses.
-            </p>
-          </div>
-
-          <button className="flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm">
+    <FlexposPageShell
+      title="Settings"
+      description="Configure your multi-purpose POS for grocery, café, retail, pharmacy, salon, and service businesses."
+      action={
+        <FlexposButton>
+          <span className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
             Save Settings
-          </button>
-        </div>
+          </span>
+        </FlexposButton>
+      }
+    >
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {settingsSections.map((section) => {
+          const Icon = section.icon;
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {settingsSections.map((section) => {
-            const Icon = section.icon;
+          return (
+            <FlexposCard key={section.title} className="p-6">
+              <div className="w-fit rounded-2xl bg-emerald-50 p-3 text-emerald-700">
+                <Icon className="h-6 w-6" />
+              </div>
 
-            return (
-              <article
-                key={section.title}
-                className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm"
-              >
-                <div className="w-fit rounded-2xl bg-emerald-50 p-3 text-emerald-700">
-                  <Icon className="h-6 w-6" />
-                </div>
+              <h2 className="mt-6 text-xl font-black text-slate-950">
+                {section.title}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                {section.description}
+              </p>
 
-                <h2 className="mt-6 text-xl font-black text-slate-950">
-                  {section.title}
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  {section.description}
-                </p>
+              <div className="mt-5 space-y-2">
+                {section.items.map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3"
+                  >
+                    <span className="text-sm font-bold text-slate-600">
+                      {item}
+                    </span>
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-500">
+                      Edit
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </FlexposCard>
+          );
+        })}
+      </section>
 
-                <div className="mt-5 space-y-2">
-                  {section.items.map((item) => (
-                    <div
-                      key={item}
-                      className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3"
-                    >
-                      <span className="text-sm font-bold text-slate-600">
-                        {item}
-                      </span>
-                      <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-500">
-                        Edit
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </article>
-            );
-          })}
-        </section>
+      <section className="mt-6 grid gap-4 xl:grid-cols-3">
+        {hardwareSections.map((section) => {
+          const Icon = section.icon;
 
-        <section className="mt-6 grid gap-4 xl:grid-cols-3">
-          <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="w-fit rounded-2xl bg-emerald-50 p-3 text-emerald-700">
-              <Printer className="h-6 w-6" />
-            </div>
-            <h2 className="mt-6 text-xl font-black text-slate-950">
-              Hardware Setup
-            </h2>
-            <p className="mt-2 text-sm text-slate-500">
-              Connect barcode scanners, receipt printers, cash drawers, and
-              weighing scales.
-            </p>
-          </article>
+          return (
+            <FlexposCard key={section.title} className="p-6">
+              <div className="w-fit rounded-2xl bg-emerald-50 p-3 text-emerald-700">
+                <Icon className="h-6 w-6" />
+              </div>
 
-          <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="w-fit rounded-2xl bg-emerald-50 p-3 text-emerald-700">
-              <Smartphone className="h-6 w-6" />
-            </div>
-            <h2 className="mt-6 text-xl font-black text-slate-950">
-              Mobile POS
-            </h2>
-            <p className="mt-2 text-sm text-slate-500">
-              Tablet and phone cashier mode for restaurants, salons, and pop-up
-              shops.
-            </p>
-          </article>
-
-          <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="w-fit rounded-2xl bg-emerald-50 p-3 text-emerald-700">
-              <Lock className="h-6 w-6" />
-            </div>
-            <h2 className="mt-6 text-xl font-black text-slate-950">
-              Offline Mode
-            </h2>
-            <p className="mt-2 text-sm text-slate-500">
-              Keep selling even when internet is unstable, then sync later.
-            </p>
-          </article>
-        </section>
-      </div>
-    </main>
+              <h2 className="mt-6 text-xl font-black text-slate-950">
+                {section.title}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                {section.description}
+              </p>
+            </FlexposCard>
+          );
+        })}
+      </section>
+    </FlexposPageShell>
   );
 }
