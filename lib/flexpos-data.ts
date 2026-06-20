@@ -23,12 +23,21 @@ export type CartItem = {
   price: number;
 };
 
+export type PaymentMethod = "Cash" | "M-Pesa" | "Card" | "Split";
+
 export const businessModes: BusinessMode[] = [
   "Grocery",
   "Cafe",
   "Retail",
   "Pharmacy",
   "Salon",
+];
+
+export const paymentMethods: PaymentMethod[] = [
+  "Cash",
+  "M-Pesa",
+  "Card",
+  "Split",
 ];
 
 export const categories = [

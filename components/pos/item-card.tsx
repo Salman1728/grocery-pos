@@ -1,10 +1,13 @@
+"use client";
+
 import { CatalogItem } from "@/lib/flexpos-data";
 
 type ItemCardProps = {
   item: CatalogItem;
+  onAdd: (item: CatalogItem) => void;
 };
 
-export function ItemCard({ item }: ItemCardProps) {
+export function ItemCard({ item, onAdd }: ItemCardProps) {
   return (
     <article className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <div className="mb-5 flex items-start justify-between gap-3">
@@ -27,7 +30,11 @@ export function ItemCard({ item }: ItemCardProps) {
           KES {item.price.toLocaleString()}
         </p>
 
-        <button className="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-emerald-700">
+        <button
+          type="button"
+          onClick={() => onAdd(item)}
+          className="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700"
+        >
           Add
         </button>
       </div>

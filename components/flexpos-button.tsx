@@ -4,12 +4,18 @@ type FlexposButtonProps = {
   children: ReactNode;
   variant?: "primary" | "secondary" | "dark";
   className?: string;
+  type?: "button" | "submit" | "reset";
+  onClick?: () => void;
+  disabled?: boolean;
 };
 
 export function FlexposButton({
   children,
   variant = "primary",
   className = "",
+  type = "button",
+  onClick,
+  disabled = false,
 }: FlexposButtonProps) {
   const styles = {
     primary: "bg-emerald-600 text-white hover:bg-emerald-700",
@@ -20,7 +26,10 @@ export function FlexposButton({
 
   return (
     <button
-      className={`rounded-2xl px-5 py-3 text-sm font-bold shadow-sm transition ${styles[variant]} ${className}`}
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={`rounded-2xl px-5 py-3 text-sm font-bold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 ${styles[variant]} ${className}`}
     >
       {children}
     </button>
