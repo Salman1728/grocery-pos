@@ -11,8 +11,10 @@ import {
 } from "react";
 import {
   catalogItems,
+  customers as seedCustomers,
   type CartItem,
   type CatalogItem,
+  type Customer,
   type PaymentMethod,
 } from "./flexpos-data";
 
@@ -97,6 +99,11 @@ type FlexposContextValue = {
   cartSubtotal: number;
   cartVat: number;
   cartTotal: number;
+  customers: Customer[];
+  addCustomer: (customer: Customer) => void;
+  selectedCustomerId: string | null;
+  selectedCustomer: Customer | null;
+  selectCustomer: (id: string | null) => void;
   sales: Sale[];
   recordSale: (
     payment: PaymentMethod,
@@ -124,6 +131,13 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
   const [catalog, setCatalog] = useState<CatalogItem[]>(catalogItems);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [sales, setSales] = useState<Sale[]>(seedSales);
+  const [customers, setCustomers] = useState<Customer[]>(seedCustomers);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(
+    null
+  );
+
+  const selectedCustomer =
+    customers.find((customer) => customer.id === selectedCustomerId) ?? null;
 
   // localStorage is only touched inside effects — never during render or in a
   // useState initializer — so server render and first client render match.
@@ -138,10 +152,16 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
           catalog?: CatalogItem[];
           cart?: CartItem[];
           sales?: Sale[];
+          customers?: Customer[];
+          selectedCustomerId?: string | null;
         };
         if (Array.isArray(saved.catalog)) setCatalog(saved.catalog);
         if (Array.isArray(saved.cart)) setCart(saved.cart);
         if (Array.isArray(saved.sales)) setSales(saved.sales);
+        if (Array.isArray(saved.customers)) setCustomers(saved.customers);
+        if ("selectedCustomerId" in saved) {
+          setSelectedCustomerId(saved.selectedCustomerId ?? null);
+        }
       }
     } catch {
       // Corrupt or unavailable storage — fall back to seed state.
@@ -158,12 +178,12 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ catalog, cart, sales })
+        JSON.stringify({ catalog, cart, sales, customers, selectedCustomerId })
       );
     } catch {
       // Ignore quota / unavailable storage errors.
     }
-  }, [catalog, cart, sales]);
+  }, [catalog, cart, sales, customers, selectedCustomerId]);
 
   const cartSubtotal = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -228,16 +248,26 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
     setCart([]);
   }
 
+  function addCustomer(customer: Customer) {
+    setCustomers((current) => [customer, ...current]);
+  }
+
+  function selectCustomer(id: string | null) {
+    setSelectedCustomerId(id);
+  }
+
   function recordSale(
     payment: PaymentMethod,
-    customer = "Walk-in Customer",
+    customer?: string,
     channel = "Checkout"
   ): Sale | null {
     if (cart.length === 0) return null;
 
+    const buyer = customer ?? selectedCustomer?.name ?? "Walk-in Customer";
+
     const sale: Sale = {
       id: `SALE-${1000 + sales.length + 1}`,
-      customer,
+      customer: buyer,
       channel,
       payment,
       items: cart,
@@ -263,6 +293,11 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
     cartSubtotal,
     cartVat,
     cartTotal,
+    customers,
+    addCustomer,
+    selectedCustomerId,
+    selectedCustomer,
+    selectCustomer,
     sales,
     recordSale,
     salesSummary,

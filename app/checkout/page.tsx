@@ -35,6 +35,9 @@ export default function CheckoutPage() {
     cartSubtotal,
     cartVat,
     cartTotal,
+    customers,
+    selectedCustomerId,
+    selectCustomer,
     recordSale,
   } = useFlexpos();
 
@@ -67,6 +70,7 @@ export default function CheckoutPage() {
   function newSale() {
     clearCart();
     setPayment(null);
+    selectCustomer(null);
     setNotice(null);
   }
 
@@ -219,6 +223,9 @@ export default function CheckoutPage() {
             subtotal={cartSubtotal}
             vat={cartVat}
             total={cartTotal}
+            customers={customers}
+            selectedCustomerId={selectedCustomerId}
+            onSelectCustomer={selectCustomer}
             onIncrease={(id) => changeQuantity(id, 1)}
             onDecrease={(id) => changeQuantity(id, -1)}
             onRemove={removeFromCart}

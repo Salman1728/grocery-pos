@@ -1,7 +1,7 @@
 "use client";
 
 import { Minus, Plus, Trash2 } from "lucide-react";
-import { CartItem } from "@/lib/flexpos-data";
+import { CartItem, Customer } from "@/lib/flexpos-data";
 
 type CartPanelProps = {
   items: CartItem[];
@@ -9,6 +9,9 @@ type CartPanelProps = {
   vat: number;
   total: number;
   discount?: number;
+  customers: Customer[];
+  selectedCustomerId: string | null;
+  onSelectCustomer: (id: string | null) => void;
   onIncrease: (id: string) => void;
   onDecrease: (id: string) => void;
   onRemove: (id: string) => void;
@@ -20,23 +23,46 @@ export function CartPanel({
   vat,
   total,
   discount = 0,
+  customers,
+  selectedCustomerId,
+  onSelectCustomer,
   onIncrease,
   onDecrease,
   onRemove,
 }: CartPanelProps) {
+  const selectedCustomer =
+    customers.find((customer) => customer.id === selectedCustomerId) ?? null;
   return (
     <aside className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
       <div>
         <h2 className="text-2xl font-black text-slate-950">Current Sale</h2>
         <p className="mt-1 text-sm font-medium text-slate-500">
-          Customer: Walk-in customer
+          Customer: {selectedCustomer ? selectedCustomer.name : "Walk-in customer"}
         </p>
       </div>
 
       <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <p className="text-sm font-bold text-slate-950">Customer selector</p>
-        <p className="mt-1 text-xs text-slate-500">
-          Add customer for loyalty, credit sales, or WhatsApp receipts.
+        <label
+          htmlFor="cart-customer"
+          className="text-sm font-bold text-slate-950"
+        >
+          Customer selector
+        </label>
+        <select
+          id="cart-customer"
+          value={selectedCustomerId ?? ""}
+          onChange={(event) => onSelectCustomer(event.target.value || null)}
+          className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-emerald-400"
+        >
+          <option value="">Walk-in customer</option>
+          {customers.map((customer) => (
+            <option key={customer.id} value={customer.id}>
+              {customer.name} · {customer.phone}
+            </option>
+          ))}
+        </select>
+        <p className="mt-2 text-xs text-slate-500">
+          Pick a customer for loyalty, credit sales, or WhatsApp receipts.
         </p>
       </div>
 

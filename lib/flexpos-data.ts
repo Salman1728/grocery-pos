@@ -230,8 +230,18 @@ export const inventoryRows = [
   },
 ];
 
-export const customers = [
+export type Customer = {
+  id: string;
+  name: string;
+  phone: string;
+  lastVisit: string;
+  spend: string;
+  points: number;
+};
+
+export const customers: Customer[] = [
   {
+    id: "amina-ali",
     name: "Amina Ali",
     phone: "0712 000 111",
     lastVisit: "Today",
@@ -239,6 +249,7 @@ export const customers = [
     points: 840,
   },
   {
+    id: "john-mwangi",
     name: "John Mwangi",
     phone: "0722 444 100",
     lastVisit: "Yesterday",
@@ -246,6 +257,7 @@ export const customers = [
     points: 1420,
   },
   {
+    id: "fatima-noor",
     name: "Fatima Noor",
     phone: "0790 101 222",
     lastVisit: "Jun 12",
