@@ -92,7 +92,6 @@ export default function CatalogPage() {
   const [activeFilter, setActiveFilter] = useState<Filter>("All");
   const [showForm, setShowForm] = useState(false);
   const [draft, setDraft] = useState<DraftItem>(emptyDraft);
-  const [seq, setSeq] = useState(0);
 
   const filteredItems = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -123,7 +122,8 @@ export default function CatalogPage() {
     if (!canSave) return;
 
     const newItem: CatalogItem = {
-      id: `${slugify(draft.name) || "item"}-${seq + 1}`,
+      // Timestamp suffix keeps IDs unique even across reloads / persisted items.
+      id: `${slugify(draft.name) || "item"}-${Date.now()}`,
       name: draft.name.trim(),
       type: draft.type,
       category: draft.category.trim() || "Uncategorized",
@@ -134,7 +134,6 @@ export default function CatalogPage() {
     };
 
     addCatalogItem(newItem);
-    setSeq((value) => value + 1);
     resetForm();
   }
 

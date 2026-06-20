@@ -3,7 +3,9 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -116,10 +118,52 @@ function formatNow(): string {
   return `Today, ${time}`;
 }
 
+const STORAGE_KEY = "flexpos-state-v1";
+
 export function FlexposProvider({ children }: { children: ReactNode }) {
   const [catalog, setCatalog] = useState<CatalogItem[]>(catalogItems);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [sales, setSales] = useState<Sale[]>(seedSales);
+
+  // localStorage is only touched inside effects — never during render or in a
+  // useState initializer — so server render and first client render match.
+  const hydrated = useRef(false);
+
+  // Load persisted state once, after mount.
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as {
+          catalog?: CatalogItem[];
+          cart?: CartItem[];
+          sales?: Sale[];
+        };
+        if (Array.isArray(saved.catalog)) setCatalog(saved.catalog);
+        if (Array.isArray(saved.cart)) setCart(saved.cart);
+        if (Array.isArray(saved.sales)) setSales(saved.sales);
+      }
+    } catch {
+      // Corrupt or unavailable storage — fall back to seed state.
+    }
+  }, []);
+
+  // Persist on change. Skip the first run so the seed values can't overwrite
+  // freshly loaded data before the load effect's setState has committed.
+  useEffect(() => {
+    if (!hydrated.current) {
+      hydrated.current = true;
+      return;
+    }
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ catalog, cart, sales })
+      );
+    } catch {
+      // Ignore quota / unavailable storage errors.
+    }
+  }, [catalog, cart, sales]);
 
   const cartSubtotal = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
