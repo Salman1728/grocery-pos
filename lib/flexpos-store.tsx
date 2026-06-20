@@ -125,6 +125,20 @@ function formatNow(): string {
   return `Today, ${time}`;
 }
 
+// Customer spend is stored as a display string like "KES 8,400".
+function parseKes(value: string): number {
+  return Number(value.replace(/[^0-9.]/g, "")) || 0;
+}
+
+function formatKes(value: number): string {
+  return `KES ${Math.round(value).toLocaleString()}`;
+}
+
+// Loyalty rule: 1 point per KES 10 spent (matches the seeded customers).
+function pointsEarned(total: number): number {
+  return Math.round(total / 10);
+}
+
 const STORAGE_KEY = "flexpos-state-v1";
 
 export function FlexposProvider({ children }: { children: ReactNode }) {
@@ -278,6 +292,24 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
     };
 
     setSales((current) => [sale, ...current]);
+
+    // Close the loyalty loop: credit the selected customer's points and spend.
+    if (selectedCustomerId) {
+      const earned = pointsEarned(sale.total);
+      setCustomers((current) =>
+        current.map((existing) =>
+          existing.id === selectedCustomerId
+            ? {
+                ...existing,
+                points: existing.points + earned,
+                spend: formatKes(parseKes(existing.spend) + sale.total),
+                lastVisit: "Today",
+              }
+            : existing
+        )
+      );
+    }
+
     clearCart();
     return sale;
   }
