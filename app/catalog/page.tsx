@@ -5,6 +5,7 @@ import { Plus, Search, X } from "lucide-react";
 import {
   businessModes,
   isLowStock,
+  stockDisplay,
   type BusinessMode,
   type CatalogItem,
 } from "@/lib/flexpos-data";
@@ -73,7 +74,7 @@ type DraftItem = {
   type: CatalogItem["type"];
   category: string;
   price: string;
-  stockLabel: string;
+  stock: string;
   mode: BusinessMode;
 };
 
@@ -82,7 +83,7 @@ const emptyDraft: DraftItem = {
   type: "Product",
   category: "",
   price: "",
-  stockLabel: "",
+  stock: "",
   mode: "Grocery",
 };
 
@@ -121,6 +122,11 @@ export default function CatalogPage() {
   function addItem() {
     if (!canSave) return;
 
+    const stockValue =
+      draft.stock.trim() === ""
+        ? null
+        : Math.max(0, Math.floor(Number(draft.stock) || 0));
+
     const newItem: CatalogItem = {
       // Timestamp suffix keeps IDs unique even across reloads / persisted items.
       id: `${slugify(draft.name) || "item"}-${Date.now()}`,
@@ -128,7 +134,8 @@ export default function CatalogPage() {
       type: draft.type,
       category: draft.category.trim() || "Uncategorized",
       price: priceValue,
-      stockLabel: draft.stockLabel.trim() || "Stock: 0",
+      stock: stockValue,
+      stockLabel: stockValue === null ? "Not tracked" : "",
       mode: draft.mode,
       color: colorPalette[catalog.length % colorPalette.length],
     };
@@ -240,14 +247,14 @@ export default function CatalogPage() {
 
             <label className="block">
               <span className="mb-1 block text-xs font-bold text-slate-600">
-                Stock / Duration
+                Stock quantity
               </span>
               <input
-                value={draft.stockLabel}
-                onChange={(event) =>
-                  updateDraft("stockLabel", event.target.value)
-                }
-                placeholder="e.g. Stock: 25 or 30 minutes"
+                type="number"
+                min={0}
+                value={draft.stock}
+                onChange={(event) => updateDraft("stock", event.target.value)}
+                placeholder="Leave blank for services"
                 className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none focus:border-emerald-400"
               />
             </label>
@@ -345,7 +352,7 @@ export default function CatalogPage() {
                   KES {item.price.toLocaleString()}
                 </span>
                 <span className="font-bold text-slate-500">
-                  {item.stockLabel}
+                  {stockDisplay(item)}
                 </span>
                 <span
                   className={`w-fit rounded-full px-3 py-1 text-xs font-black ${

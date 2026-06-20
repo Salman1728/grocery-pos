@@ -11,6 +11,9 @@ export type CatalogItem = {
   type: "Product" | "Food" | "Medicine" | "Service" | "Custom";
   category: string;
   price: number;
+  // Numeric stock for tracked goods; null for services / made-to-order items
+  // (which use stockLabel for their descriptive text instead).
+  stock: number | null;
   stockLabel: string;
   mode: BusinessMode;
   color: string;
@@ -27,17 +30,19 @@ export type PaymentMethod = "Cash" | "M-Pesa" | "Card" | "Split";
 
 export const LOW_STOCK_THRESHOLD = 20;
 
-// Only "Stock: N" labels carry a real stock count; service/food durations
-// (e.g. "30 minutes", "Prepared fresh") do not.
+// Tracked goods have a numeric stock; services / made-to-order items are null.
 export function stockCount(item: CatalogItem): number | null {
-  if (!/stock/i.test(item.stockLabel)) return null;
-  const match = item.stockLabel.match(/(\d+)/);
-  return match ? Number(match[1]) : null;
+  return item.stock;
 }
 
 export function isLowStock(item: CatalogItem): boolean {
-  const count = stockCount(item);
-  return count !== null && count < LOW_STOCK_THRESHOLD;
+  return item.stock !== null && item.stock < LOW_STOCK_THRESHOLD;
+}
+
+// Display text for the stock column: live count for tracked goods, otherwise
+// the descriptive label.
+export function stockDisplay(item: CatalogItem): string {
+  return item.stock !== null ? `Stock: ${item.stock}` : item.stockLabel;
 }
 
 export const businessModes: BusinessMode[] = [
@@ -73,7 +78,8 @@ export const catalogItems: CatalogItem[] = [
     type: "Product",
     category: "Groceries",
     price: 120,
-    stockLabel: "Stock: 20",
+    stock: 20,
+    stockLabel: "",
     mode: "Grocery",
     color: "bg-blue-500",
   },
@@ -83,7 +89,8 @@ export const catalogItems: CatalogItem[] = [
     type: "Product",
     category: "Groceries",
     price: 420,
-    stockLabel: "Stock: 35",
+    stock: 35,
+    stockLabel: "",
     mode: "Grocery",
     color: "bg-amber-500",
   },
@@ -93,7 +100,8 @@ export const catalogItems: CatalogItem[] = [
     type: "Product",
     category: "Groceries",
     price: 70,
-    stockLabel: "Stock: 100",
+    stock: 100,
+    stockLabel: "",
     mode: "Grocery",
     color: "bg-cyan-500",
   },
@@ -103,6 +111,7 @@ export const catalogItems: CatalogItem[] = [
     type: "Food",
     category: "Food",
     price: 650,
+    stock: null,
     stockLabel: "Kitchen item",
     mode: "Cafe",
     color: "bg-orange-500",
@@ -113,6 +122,7 @@ export const catalogItems: CatalogItem[] = [
     type: "Food",
     category: "Food",
     price: 350,
+    stock: null,
     stockLabel: "Prepared fresh",
     mode: "Cafe",
     color: "bg-stone-600",
@@ -123,6 +133,7 @@ export const catalogItems: CatalogItem[] = [
     type: "Product",
     category: "Retail",
     price: 1200,
+    stock: null,
     stockLabel: "Size variants",
     mode: "Retail",
     color: "bg-indigo-500",
@@ -133,7 +144,8 @@ export const catalogItems: CatalogItem[] = [
     type: "Medicine",
     category: "Medicine",
     price: 180,
-    stockLabel: "Stock: 44",
+    stock: 44,
+    stockLabel: "",
     mode: "Pharmacy",
     color: "bg-red-500",
   },
@@ -143,7 +155,8 @@ export const catalogItems: CatalogItem[] = [
     type: "Product",
     category: "Beauty",
     price: 850,
-    stockLabel: "Stock: 15",
+    stock: 15,
+    stockLabel: "",
     mode: "Salon",
     color: "bg-purple-500",
   },
@@ -153,6 +166,7 @@ export const catalogItems: CatalogItem[] = [
     type: "Service",
     category: "Services",
     price: 500,
+    stock: null,
     stockLabel: "30 minutes",
     mode: "Salon",
     color: "bg-emerald-500",

@@ -1,6 +1,6 @@
 "use client";
 
-import { CatalogItem } from "@/lib/flexpos-data";
+import { CatalogItem, stockDisplay } from "@/lib/flexpos-data";
 
 type ItemCardProps = {
   item: CatalogItem;
@@ -23,7 +23,9 @@ export function ItemCard({ item, onAdd }: ItemCardProps) {
       </div>
 
       <h3 className="text-base font-bold text-slate-950">{item.name}</h3>
-      <p className="mt-1 text-xs font-medium text-slate-500">{item.stockLabel}</p>
+      <p className="mt-1 text-xs font-medium text-slate-500">
+        {stockDisplay(item)}
+      </p>
 
       <div className="mt-5 flex items-center justify-between">
         <p className="text-lg font-black text-emerald-700">

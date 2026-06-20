@@ -139,7 +139,7 @@ function pointsEarned(total: number): number {
   return Math.round(total / 10);
 }
 
-const STORAGE_KEY = "flexpos-state-v1";
+const STORAGE_KEY = "flexpos-state-v2";
 
 export function FlexposProvider({ children }: { children: ReactNode }) {
   const [catalog, setCatalog] = useState<CatalogItem[]>(catalogItems);
@@ -292,6 +292,16 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
     };
 
     setSales((current) => [sale, ...current]);
+
+    // Close the inventory loop: decrement stock for tracked items that sold.
+    setCatalog((current) =>
+      current.map((item) => {
+        if (item.stock === null) return item;
+        const line = cart.find((entry) => entry.id === item.id);
+        if (!line) return item;
+        return { ...item, stock: Math.max(0, item.stock - line.quantity) };
+      })
+    );
 
     // Close the loyalty loop: credit the selected customer's points and spend.
     if (selectedCustomerId) {
