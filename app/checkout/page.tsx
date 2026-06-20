@@ -38,6 +38,8 @@ export default function CheckoutPage() {
     customers,
     selectedCustomerId,
     selectCustomer,
+    businessMode,
+    setBusinessMode,
     recordSale,
   } = useFlexpos();
 
@@ -176,7 +178,10 @@ export default function CheckoutPage() {
             </button>
           </div>
 
-          <BusinessModeSwitcher activeMode="Grocery" />
+          <BusinessModeSwitcher
+            activeMode={businessMode}
+            onSelect={setBusinessMode}
+          />
 
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => {

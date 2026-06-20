@@ -12,6 +12,7 @@ import {
 import {
   catalogItems,
   customers as seedCustomers,
+  type BusinessMode,
   type CartItem,
   type CatalogItem,
   type Customer,
@@ -24,6 +25,7 @@ export type Sale = {
   id: string;
   customer: string;
   channel: string;
+  mode: BusinessMode;
   payment: PaymentMethod;
   items: CartItem[];
   subtotal: number;
@@ -39,6 +41,7 @@ const seedSales: Sale[] = [
     id: "SALE-1001",
     customer: "Walk-in Customer",
     channel: "Checkout",
+    mode: "Grocery",
     payment: "M-Pesa",
     items: [],
     subtotal: 1810,
@@ -50,6 +53,7 @@ const seedSales: Sale[] = [
     id: "SALE-1002",
     customer: "Amina Ali",
     channel: "Checkout",
+    mode: "Grocery",
     payment: "Cash",
     items: [],
     subtotal: 724,
@@ -61,6 +65,7 @@ const seedSales: Sale[] = [
     id: "SALE-1003",
     customer: "John Mwangi",
     channel: "Cafe Order",
+    mode: "Cafe",
     payment: "Card",
     items: [],
     subtotal: 1250,
@@ -72,6 +77,7 @@ const seedSales: Sale[] = [
     id: "SALE-1004",
     customer: "Walk-in Customer",
     channel: "Retail",
+    mode: "Retail",
     payment: "Split",
     items: [],
     subtotal: 2802,
@@ -104,6 +110,8 @@ type FlexposContextValue = {
   selectedCustomerId: string | null;
   selectedCustomer: Customer | null;
   selectCustomer: (id: string | null) => void;
+  businessMode: BusinessMode;
+  setBusinessMode: (mode: BusinessMode) => void;
   sales: Sale[];
   recordSale: (
     payment: PaymentMethod,
@@ -139,7 +147,7 @@ function pointsEarned(total: number): number {
   return Math.round(total / 10);
 }
 
-const STORAGE_KEY = "flexpos-state-v2";
+const STORAGE_KEY = "flexpos-state-v3";
 
 export function FlexposProvider({ children }: { children: ReactNode }) {
   const [catalog, setCatalog] = useState<CatalogItem[]>(catalogItems);
@@ -149,6 +157,7 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(
     null
   );
+  const [businessMode, setBusinessMode] = useState<BusinessMode>("Grocery");
 
   const selectedCustomer =
     customers.find((customer) => customer.id === selectedCustomerId) ?? null;
@@ -168,6 +177,7 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
           sales?: Sale[];
           customers?: Customer[];
           selectedCustomerId?: string | null;
+          businessMode?: BusinessMode;
         };
         if (Array.isArray(saved.catalog)) setCatalog(saved.catalog);
         if (Array.isArray(saved.cart)) setCart(saved.cart);
@@ -176,6 +186,7 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
         if ("selectedCustomerId" in saved) {
           setSelectedCustomerId(saved.selectedCustomerId ?? null);
         }
+        if (saved.businessMode) setBusinessMode(saved.businessMode);
       }
     } catch {
       // Corrupt or unavailable storage — fall back to seed state.
@@ -192,12 +203,19 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ catalog, cart, sales, customers, selectedCustomerId })
+        JSON.stringify({
+          catalog,
+          cart,
+          sales,
+          customers,
+          selectedCustomerId,
+          businessMode,
+        })
       );
     } catch {
       // Ignore quota / unavailable storage errors.
     }
-  }, [catalog, cart, sales, customers, selectedCustomerId]);
+  }, [catalog, cart, sales, customers, selectedCustomerId, businessMode]);
 
   const cartSubtotal = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -283,6 +301,7 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
       id: `SALE-${1000 + sales.length + 1}`,
       customer: buyer,
       channel,
+      mode: businessMode,
       payment,
       items: cart,
       subtotal: cartSubtotal,
@@ -340,6 +359,8 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
     selectedCustomerId,
     selectedCustomer,
     selectCustomer,
+    businessMode,
+    setBusinessMode,
     sales,
     recordSale,
     salesSummary,

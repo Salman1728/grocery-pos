@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { BarChart3, Boxes, CreditCard, ReceiptText } from "lucide-react";
-import { isLowStock } from "@/lib/flexpos-data";
+import { businessModes, isLowStock } from "@/lib/flexpos-data";
 import { useFlexpos } from "@/lib/flexpos-store";
 import { FlexposPageShell } from "@/components/flexpos-page-shell";
 import { FlexposCard } from "@/components/flexpos-card";
@@ -35,17 +35,20 @@ const quickActions = [
   },
 ];
 
-const businessMix = [
-  { label: "Grocery", value: "43%" },
-  { label: "Cafe", value: "24%" },
-  { label: "Retail", value: "17%" },
-  { label: "Pharmacy", value: "9%" },
-  { label: "Salon", value: "7%" },
-];
-
 export default function DashboardPage() {
-  const { salesSummary, catalog } = useFlexpos();
+  const { sales, salesSummary, catalog } = useFlexpos();
   const lowStockCount = catalog.filter(isLowStock).length;
+
+  const businessMix = businessModes.map((mode) => {
+    const total = sales
+      .filter((sale) => sale.mode === mode)
+      .reduce((sum, sale) => sum + sale.total, 0);
+    const share =
+      salesSummary.gross > 0
+        ? Math.round((total / salesSummary.gross) * 100)
+        : 0;
+    return { label: mode, value: `${share}%` };
+  });
 
   const dashboardStats = [
     {
@@ -116,7 +119,7 @@ export default function DashboardPage() {
           <div>
             <h2 className="text-xl font-black text-slate-950">Sales Trend</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Last 7 days across Cash, M-Pesa, Card, and Split payments.
+              Illustrative 7-day trend (sample data).
             </p>
           </div>
 

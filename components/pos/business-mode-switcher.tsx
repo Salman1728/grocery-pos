@@ -1,10 +1,16 @@
+"use client";
+
 import { BusinessMode, businessModes } from "@/lib/flexpos-data";
 
 type BusinessModeSwitcherProps = {
   activeMode: BusinessMode;
+  onSelect: (mode: BusinessMode) => void;
 };
 
-export function BusinessModeSwitcher({ activeMode }: BusinessModeSwitcherProps) {
+export function BusinessModeSwitcher({
+  activeMode,
+  onSelect,
+}: BusinessModeSwitcherProps) {
   return (
     <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
@@ -27,6 +33,8 @@ export function BusinessModeSwitcher({ activeMode }: BusinessModeSwitcherProps) 
           return (
             <button
               key={mode}
+              type="button"
+              onClick={() => onSelect(mode)}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 isActive
                   ? "bg-emerald-600 text-white shadow-sm"
