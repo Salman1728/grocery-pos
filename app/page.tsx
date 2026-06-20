@@ -1,9 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import { BarChart3, Boxes, CreditCard, ReceiptText } from "lucide-react";
-import { dashboardStats } from "@/lib/flexpos-data";
+import { isLowStock } from "@/lib/flexpos-data";
+import { useFlexpos } from "@/lib/flexpos-store";
 import { FlexposPageShell } from "@/components/flexpos-page-shell";
 import { FlexposCard } from "@/components/flexpos-card";
 import { FlexposButton } from "@/components/flexpos-button";
+
+function money(value: number) {
+  return `KES ${Math.round(value).toLocaleString()}`;
+}
 
 const quickActions = [
   {
@@ -37,6 +44,35 @@ const businessMix = [
 ];
 
 export default function DashboardPage() {
+  const { salesSummary, catalog } = useFlexpos();
+  const lowStockCount = catalog.filter(isLowStock).length;
+
+  const dashboardStats = [
+    {
+      label: "Today Sales",
+      value: money(salesSummary.gross),
+      change: "Live",
+    },
+    {
+      label: "Transactions",
+      value: String(salesSummary.count),
+      change: "All modes",
+    },
+    {
+      label: "Low Stock",
+      value: `${lowStockCount} item${lowStockCount === 1 ? "" : "s"}`,
+      change: "Needs review",
+    },
+    {
+      label: "M-Pesa Collected",
+      value: money(salesSummary.mpesa),
+      change:
+        salesSummary.gross > 0
+          ? `${Math.round((salesSummary.mpesa / salesSummary.gross) * 100)}% of sales`
+          : "0% of sales",
+    },
+  ];
+
   return (
     <FlexposPageShell
       title="Business Dashboard"

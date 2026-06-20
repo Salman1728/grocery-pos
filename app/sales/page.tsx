@@ -1,55 +1,45 @@
-import { CalendarDays, Download, ReceiptText, RefreshCw, Search } from "lucide-react";
+"use client";
+
+import { useMemo, useState } from "react";
+import {
+  CalendarDays,
+  Download,
+  ReceiptText,
+  RefreshCw,
+  Search,
+} from "lucide-react";
+import { useFlexpos } from "@/lib/flexpos-store";
 import { FlexposPageShell } from "@/components/flexpos-page-shell";
 import { FlexposCard } from "@/components/flexpos-card";
 import { FlexposButton } from "@/components/flexpos-button";
 
-const sales = [
-  {
-    id: "SALE-1001",
-    customer: "Walk-in Customer",
-    channel: "Checkout",
-    payment: "M-Pesa",
-    amount: "KES 2,100",
-    status: "Completed",
-    time: "Today, 10:42 AM",
-  },
-  {
-    id: "SALE-1002",
-    customer: "Amina Ali",
-    channel: "Checkout",
-    payment: "Cash",
-    amount: "KES 840",
-    status: "Completed",
-    time: "Today, 11:18 AM",
-  },
-  {
-    id: "SALE-1003",
-    customer: "John Mwangi",
-    channel: "Cafe Order",
-    payment: "Card",
-    amount: "KES 1,450",
-    status: "Completed",
-    time: "Today, 12:05 PM",
-  },
-  {
-    id: "SALE-1004",
-    customer: "Walk-in Customer",
-    channel: "Retail",
-    payment: "Split",
-    amount: "KES 3,250",
-    status: "Completed",
-    time: "Today, 1:22 PM",
-  },
-];
-
-const salesStats = [
-  ["Gross Sales", "KES 84,230", "+12.4% today"],
-  ["Transactions", "312", "Across all modes"],
-  ["Average Sale", "KES 270", "Per transaction"],
-  ["Refunds", "KES 2,400", "3 refunds"],
-];
+function money(value: number) {
+  return `KES ${Math.round(value).toLocaleString()}`;
+}
 
 export default function SalesPage() {
+  const { sales, salesSummary } = useFlexpos();
+  const [search, setSearch] = useState("");
+
+  const salesStats: [string, string, string][] = [
+    ["Gross Sales", money(salesSummary.gross), "All recorded sales"],
+    ["Transactions", String(salesSummary.count), "Across all modes"],
+    ["Average Sale", money(salesSummary.average), "Per transaction"],
+    ["M-Pesa Collected", money(salesSummary.mpesa), "Mobile payments"],
+  ];
+
+  const filteredSales = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (term === "") return sales;
+
+    return sales.filter((sale) =>
+      [sale.id, sale.customer, sale.payment, sale.channel]
+        .join(" ")
+        .toLowerCase()
+        .includes(term)
+    );
+  }, [sales, search]);
+
   return (
     <FlexposPageShell
       title="Sales History"
@@ -91,15 +81,17 @@ export default function SalesPage() {
           <div className="flex items-center gap-3 rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 lg:w-[520px]">
             <Search className="h-5 w-5 text-slate-400" />
             <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
               className="w-full bg-transparent text-sm font-medium outline-none placeholder:text-slate-400"
               placeholder="Search sale ID, customer, payment, or receipt..."
             />
           </div>
 
-          <FlexposButton variant="secondary">
+          <FlexposButton variant="secondary" onClick={() => setSearch("")}>
             <span className="flex items-center gap-2">
               <RefreshCw className="h-5 w-5" />
-              Refresh
+              Reset
             </span>
           </FlexposButton>
         </div>
@@ -116,22 +108,33 @@ export default function SalesPage() {
           <span>Time</span>
         </div>
 
-        {sales.map((sale) => (
-          <div
-            key={sale.id}
-            className="grid grid-cols-[0.8fr_1.1fr_0.9fr_0.8fr_0.8fr_0.8fr_1fr] items-center border-b border-slate-100 px-6 py-5 text-sm last:border-b-0"
-          >
-            <span className="font-black text-slate-950">{sale.id}</span>
-            <span className="font-bold text-slate-600">{sale.customer}</span>
-            <span className="font-bold text-slate-500">{sale.channel}</span>
-            <span className="font-bold text-slate-600">{sale.payment}</span>
-            <span className="font-black text-emerald-700">{sale.amount}</span>
-            <span className="w-fit rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
-              {sale.status}
-            </span>
-            <span className="font-bold text-slate-500">{sale.time}</span>
+        {filteredSales.length === 0 ? (
+          <div className="px-6 py-16 text-center">
+            <p className="text-sm font-bold text-slate-600">No sales found</p>
+            <p className="mt-1 text-xs text-slate-400">
+              Complete a sale at checkout or adjust your search.
+            </p>
           </div>
-        ))}
+        ) : (
+          filteredSales.map((sale) => (
+            <div
+              key={sale.id}
+              className="grid grid-cols-[0.8fr_1.1fr_0.9fr_0.8fr_0.8fr_0.8fr_1fr] items-center border-b border-slate-100 px-6 py-5 text-sm last:border-b-0"
+            >
+              <span className="font-black text-slate-950">{sale.id}</span>
+              <span className="font-bold text-slate-600">{sale.customer}</span>
+              <span className="font-bold text-slate-500">{sale.channel}</span>
+              <span className="font-bold text-slate-600">{sale.payment}</span>
+              <span className="font-black text-emerald-700">
+                {money(sale.total)}
+              </span>
+              <span className="w-fit rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
+                Completed
+              </span>
+              <span className="font-bold text-slate-500">{sale.time}</span>
+            </div>
+          ))
+        )}
       </FlexposCard>
     </FlexposPageShell>
   );

@@ -4,10 +4,11 @@ import { useMemo, useState } from "react";
 import { Plus, Search, X } from "lucide-react";
 import {
   businessModes,
-  catalogItems,
+  isLowStock,
   type BusinessMode,
   type CatalogItem,
 } from "@/lib/flexpos-data";
+import { useFlexpos } from "@/lib/flexpos-store";
 import { FlexposPageShell } from "@/components/flexpos-page-shell";
 import { FlexposCard } from "@/components/flexpos-card";
 import { FlexposButton } from "@/components/flexpos-button";
@@ -41,20 +42,6 @@ const colorPalette = [
   "bg-indigo-500",
   "bg-orange-500",
 ];
-
-const LOW_STOCK_THRESHOLD = 20;
-
-// Only "Stock: N" labels carry a real stock count; services/food durations don't.
-function stockCount(item: CatalogItem): number | null {
-  if (!/stock/i.test(item.stockLabel)) return null;
-  const match = item.stockLabel.match(/(\d+)/);
-  return match ? Number(match[1]) : null;
-}
-
-function isLowStock(item: CatalogItem): boolean {
-  const count = stockCount(item);
-  return count !== null && count < LOW_STOCK_THRESHOLD;
-}
 
 function matchesFilter(item: CatalogItem, filter: Filter): boolean {
   switch (filter) {
@@ -100,7 +87,7 @@ const emptyDraft: DraftItem = {
 };
 
 export default function CatalogPage() {
-  const [items, setItems] = useState<CatalogItem[]>(catalogItems);
+  const { catalog, addCatalogItem } = useFlexpos();
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<Filter>("All");
   const [showForm, setShowForm] = useState(false);
@@ -110,7 +97,7 @@ export default function CatalogPage() {
   const filteredItems = useMemo(() => {
     const term = search.trim().toLowerCase();
 
-    return items.filter((item) => {
+    return catalog.filter((item) => {
       const filterMatch = matchesFilter(item, activeFilter);
 
       const searchMatch =
@@ -122,7 +109,7 @@ export default function CatalogPage() {
 
       return filterMatch && searchMatch;
     });
-  }, [items, activeFilter, search]);
+  }, [catalog, activeFilter, search]);
 
   const priceValue = Number(draft.price);
   const canSave = draft.name.trim() !== "" && priceValue > 0;
@@ -143,10 +130,10 @@ export default function CatalogPage() {
       price: priceValue,
       stockLabel: draft.stockLabel.trim() || "Stock: 0",
       mode: draft.mode,
-      color: colorPalette[items.length % colorPalette.length],
+      color: colorPalette[catalog.length % colorPalette.length],
     };
 
-    setItems((current) => [newItem, ...current]);
+    addCatalogItem(newItem);
     setSeq((value) => value + 1);
     resetForm();
   }

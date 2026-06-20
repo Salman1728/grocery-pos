@@ -3,21 +3,17 @@
 import { useMemo, useState } from "react";
 import { Search, ScanLine, Plus, CheckCircle2, X } from "lucide-react";
 import {
-  catalogItems,
   categories,
-  starterCart,
-  type CartItem,
   type CatalogItem,
   type PaymentMethod,
 } from "@/lib/flexpos-data";
+import { useFlexpos } from "@/lib/flexpos-store";
 import { BusinessModeSwitcher } from "@/components/pos/business-mode-switcher";
 import { ItemCard } from "@/components/pos/item-card";
 import { CartPanel } from "@/components/pos/cart-panel";
 import { PaymentButtons } from "@/components/pos/payment-buttons";
 import { FlexposPageShell } from "@/components/flexpos-page-shell";
 import { FlexposButton } from "@/components/flexpos-button";
-
-const VAT_RATE = 0.16;
 
 function money(value: number) {
   return `KES ${Math.round(value).toLocaleString()}`;
@@ -29,7 +25,19 @@ type SaleNotice = {
 };
 
 export default function CheckoutPage() {
-  const [cart, setCart] = useState<CartItem[]>(starterCart);
+  const {
+    catalog,
+    cart,
+    addToCart,
+    changeQuantity,
+    removeFromCart,
+    clearCart,
+    cartSubtotal,
+    cartVat,
+    cartTotal,
+    recordSale,
+  } = useFlexpos();
+
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [payment, setPayment] = useState<PaymentMethod | null>(null);
@@ -38,7 +46,7 @@ export default function CheckoutPage() {
   const filteredItems = useMemo(() => {
     const term = search.trim().toLowerCase();
 
-    return catalogItems.filter((item) => {
+    return catalog.filter((item) => {
       const categoryMatch =
         activeCategory === "All" || item.category === activeCategory;
 
@@ -49,51 +57,15 @@ export default function CheckoutPage() {
 
       return categoryMatch && searchMatch;
     });
-  }, [search, activeCategory]);
+  }, [catalog, search, activeCategory]);
 
-  const subtotal = useMemo(
-    () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
-    [cart]
-  );
-  const vat = Math.round(subtotal * VAT_RATE);
-  const total = subtotal + vat;
-
-  function addToCart(item: CatalogItem) {
+  function handleAdd(item: CatalogItem) {
     setNotice(null);
-    setCart((items) => {
-      const existing = items.find((line) => line.id === item.id);
-
-      if (existing) {
-        return items.map((line) =>
-          line.id === item.id
-            ? { ...line, quantity: line.quantity + 1 }
-            : line
-        );
-      }
-
-      return [
-        ...items,
-        { id: item.id, name: item.name, price: item.price, quantity: 1 },
-      ];
-    });
-  }
-
-  function changeQuantity(id: string, delta: number) {
-    setCart((items) =>
-      items
-        .map((line) =>
-          line.id === id ? { ...line, quantity: line.quantity + delta } : line
-        )
-        .filter((line) => line.quantity > 0)
-    );
-  }
-
-  function removeItem(id: string) {
-    setCart((items) => items.filter((line) => line.id !== id));
+    addToCart(item);
   }
 
   function newSale() {
-    setCart([]);
+    clearCart();
     setPayment(null);
     setNotice(null);
   }
@@ -101,25 +73,32 @@ export default function CheckoutPage() {
   function holdSale() {
     if (cart.length === 0) return;
 
+    const heldTotal = cartTotal;
+    const heldCount = cart.length;
+
+    clearCart();
+    setPayment(null);
     setNotice({
       tone: "info",
-      text: `Sale held · ${money(total)} (${cart.length} item${
-        cart.length > 1 ? "s" : ""
+      text: `Sale held · ${money(heldTotal)} (${heldCount} item${
+        heldCount > 1 ? "s" : ""
       })`,
     });
-    setCart([]);
-    setPayment(null);
   }
 
   function completeSale() {
     if (cart.length === 0 || !payment) return;
 
+    const sale = recordSale(payment);
+    if (!sale) return;
+
+    setPayment(null);
     setNotice({
       tone: "success",
-      text: `Sale completed · ${money(total)} paid via ${payment}`,
+      text: `Sale ${sale.id} completed · ${money(sale.total)} paid via ${
+        sale.payment
+      }`,
     });
-    setCart([]);
-    setPayment(null);
   }
 
   return (
@@ -228,7 +207,7 @@ export default function CheckoutPage() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {filteredItems.map((item) => (
-                <ItemCard key={item.id} item={item} onAdd={addToCart} />
+                <ItemCard key={item.id} item={item} onAdd={handleAdd} />
               ))}
             </div>
           )}
@@ -237,12 +216,12 @@ export default function CheckoutPage() {
         <section className="space-y-4">
           <CartPanel
             items={cart}
-            subtotal={subtotal}
-            vat={vat}
-            total={total}
+            subtotal={cartSubtotal}
+            vat={cartVat}
+            total={cartTotal}
             onIncrease={(id) => changeQuantity(id, 1)}
             onDecrease={(id) => changeQuantity(id, -1)}
-            onRemove={removeItem}
+            onRemove={removeFromCart}
           />
           <PaymentButtons
             selected={payment}

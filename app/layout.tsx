@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { FlexposSidebar } from "@/components/flexpos-sidebar";
+import { FlexposProvider } from "@/lib/flexpos-store";
 import "./globals.css";
 
 const inter = Inter({
@@ -20,8 +21,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <FlexposSidebar />
-        <div className="lg:pl-72">{children}</div>
+        <FlexposProvider>
+          <FlexposSidebar />
+          <div className="lg:pl-72">{children}</div>
+        </FlexposProvider>
       </body>
     </html>
   );

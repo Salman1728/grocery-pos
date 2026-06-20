@@ -25,6 +25,21 @@ export type CartItem = {
 
 export type PaymentMethod = "Cash" | "M-Pesa" | "Card" | "Split";
 
+export const LOW_STOCK_THRESHOLD = 20;
+
+// Only "Stock: N" labels carry a real stock count; service/food durations
+// (e.g. "30 minutes", "Prepared fresh") do not.
+export function stockCount(item: CatalogItem): number | null {
+  if (!/stock/i.test(item.stockLabel)) return null;
+  const match = item.stockLabel.match(/(\d+)/);
+  return match ? Number(match[1]) : null;
+}
+
+export function isLowStock(item: CatalogItem): boolean {
+  const count = stockCount(item);
+  return count !== null && count < LOW_STOCK_THRESHOLD;
+}
+
 export const businessModes: BusinessMode[] = [
   "Grocery",
   "Cafe",
