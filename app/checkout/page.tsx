@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Search, ScanLine, Plus, CheckCircle2, X } from "lucide-react";
 import {
   categories,
@@ -48,6 +48,11 @@ export default function CheckoutPage() {
   const [payment, setPayment] = useState<PaymentMethod | null>(null);
   const [notice, setNotice] = useState<SaleNotice | null>(null);
 
+  const searchRef = useRef<HTMLInputElement>(null);
+  const [showCustom, setShowCustom] = useState(false);
+  const [customName, setCustomName] = useState("");
+  const [customPrice, setCustomPrice] = useState("");
+
   const filteredItems = useMemo(() => {
     const term = search.trim().toLowerCase();
 
@@ -67,6 +72,35 @@ export default function CheckoutPage() {
   function handleAdd(item: CatalogItem) {
     setNotice(null);
     addToCart(item);
+  }
+
+  function handleScan() {
+    // Hardware barcode scanners type into the focused field.
+    searchRef.current?.focus();
+  }
+
+  const customPriceValue = Number(customPrice);
+  const canAddCustom = customName.trim() !== "" && customPriceValue > 0;
+
+  function addCustomItem() {
+    if (!canAddCustom) return;
+
+    const item: CatalogItem = {
+      id: `custom-${Date.now()}`,
+      name: customName.trim(),
+      type: "Custom",
+      category: "Custom",
+      price: customPriceValue,
+      stock: null,
+      stockLabel: "Custom sale",
+      mode: businessMode,
+      color: "bg-slate-500",
+    };
+
+    handleAdd(item);
+    setCustomName("");
+    setCustomPrice("");
+    setShowCustom(false);
   }
 
   function newSale() {
@@ -154,6 +188,7 @@ export default function CheckoutPage() {
             <div className="flex items-center gap-3 rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
               <Search className="h-5 w-5 text-slate-400" />
               <input
+                ref={searchRef}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 className="w-full bg-transparent text-sm font-medium outline-none placeholder:text-slate-400"
@@ -163,7 +198,8 @@ export default function CheckoutPage() {
 
             <button
               type="button"
-              className="flex items-center justify-center gap-2 rounded-3xl bg-slate-950 px-6 py-4 text-sm font-black text-white shadow-sm"
+              onClick={handleScan}
+              className="flex items-center justify-center gap-2 rounded-3xl bg-slate-950 px-6 py-4 text-sm font-black text-white shadow-sm transition hover:bg-slate-800"
             >
               <ScanLine className="h-5 w-5" />
               Scan
@@ -171,12 +207,49 @@ export default function CheckoutPage() {
 
             <button
               type="button"
-              className="flex items-center justify-center gap-2 rounded-3xl bg-emerald-600 px-6 py-4 text-sm font-black text-white shadow-sm"
+              onClick={() => setShowCustom((open) => !open)}
+              className="flex items-center justify-center gap-2 rounded-3xl bg-emerald-600 px-6 py-4 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700"
             >
               <Plus className="h-5 w-5" />
               Custom Item
             </button>
           </div>
+
+          {showCustom ? (
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <label className="block flex-1">
+                  <span className="mb-1 block text-xs font-bold text-slate-600">
+                    Custom item name
+                  </span>
+                  <input
+                    value={customName}
+                    onChange={(event) => setCustomName(event.target.value)}
+                    placeholder="e.g. Repair service"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none focus:border-emerald-400"
+                  />
+                </label>
+
+                <label className="block sm:w-40">
+                  <span className="mb-1 block text-xs font-bold text-slate-600">
+                    Price (KES)
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={customPrice}
+                    onChange={(event) => setCustomPrice(event.target.value)}
+                    placeholder="0"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none focus:border-emerald-400"
+                  />
+                </label>
+
+                <FlexposButton onClick={addCustomItem} disabled={!canAddCustom}>
+                  Add to Cart
+                </FlexposButton>
+              </div>
+            </div>
+          ) : null}
 
           <BusinessModeSwitcher
             activeMode={businessMode}
