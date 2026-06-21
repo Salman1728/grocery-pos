@@ -19,7 +19,8 @@ import {
   type PaymentMethod,
 } from "./flexpos-data";
 
-const VAT_RATE = 0.16;
+const DEFAULT_VAT_RATE = 0.16;
+const DEFAULT_BUSINESS_NAME = "FlexPOS";
 
 export type Sale = {
   id: string;
@@ -112,6 +113,10 @@ type FlexposContextValue = {
   selectCustomer: (id: string | null) => void;
   businessMode: BusinessMode;
   setBusinessMode: (mode: BusinessMode) => void;
+  vatRate: number;
+  setVatRate: (rate: number) => void;
+  businessName: string;
+  setBusinessName: (name: string) => void;
   sales: Sale[];
   recordSale: (
     payment: PaymentMethod,
@@ -158,6 +163,10 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
     null
   );
   const [businessMode, setBusinessMode] = useState<BusinessMode>("Grocery");
+  const [vatRate, setVatRate] = useState<number>(DEFAULT_VAT_RATE);
+  const [businessName, setBusinessName] = useState<string>(
+    DEFAULT_BUSINESS_NAME
+  );
 
   const selectedCustomer =
     customers.find((customer) => customer.id === selectedCustomerId) ?? null;
@@ -178,6 +187,8 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
           customers?: Customer[];
           selectedCustomerId?: string | null;
           businessMode?: BusinessMode;
+          vatRate?: number;
+          businessName?: string;
         };
         if (Array.isArray(saved.catalog)) setCatalog(saved.catalog);
         if (Array.isArray(saved.cart)) setCart(saved.cart);
@@ -187,6 +198,10 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
           setSelectedCustomerId(saved.selectedCustomerId ?? null);
         }
         if (saved.businessMode) setBusinessMode(saved.businessMode);
+        if (typeof saved.vatRate === "number") setVatRate(saved.vatRate);
+        if (typeof saved.businessName === "string") {
+          setBusinessName(saved.businessName);
+        }
       }
     } catch {
       // Corrupt or unavailable storage — fall back to seed state.
@@ -210,18 +225,29 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
           customers,
           selectedCustomerId,
           businessMode,
+          vatRate,
+          businessName,
         })
       );
     } catch {
       // Ignore quota / unavailable storage errors.
     }
-  }, [catalog, cart, sales, customers, selectedCustomerId, businessMode]);
+  }, [
+    catalog,
+    cart,
+    sales,
+    customers,
+    selectedCustomerId,
+    businessMode,
+    vatRate,
+    businessName,
+  ]);
 
   const cartSubtotal = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
     [cart]
   );
-  const cartVat = Math.round(cartSubtotal * VAT_RATE);
+  const cartVat = Math.round(cartSubtotal * vatRate);
   const cartTotal = cartSubtotal + cartVat;
 
   const salesSummary = useMemo<SalesSummary>(() => {
@@ -361,6 +387,10 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
     selectCustomer,
     businessMode,
     setBusinessMode,
+    vatRate,
+    setVatRate,
+    businessName,
+    setBusinessName,
     sales,
     recordSale,
     salesSummary,

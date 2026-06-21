@@ -1,6 +1,10 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   Bell,
   Building2,
+  CheckCircle2,
   CreditCard,
   Lock,
   Printer,
@@ -10,17 +14,12 @@ import {
   Smartphone,
   Users,
 } from "lucide-react";
+import { useFlexpos } from "@/lib/flexpos-store";
 import { FlexposPageShell } from "@/components/flexpos-page-shell";
 import { FlexposCard } from "@/components/flexpos-card";
 import { FlexposButton } from "@/components/flexpos-button";
 
 const settingsSections = [
-  {
-    title: "Business Profile",
-    description: "Business name, branches, tax details, and operating hours.",
-    icon: Building2,
-    items: ["Business name", "Branch setup", "KRA / VAT details", "Opening hours"],
-  },
   {
     title: "Payments",
     description: "Configure Cash, M-Pesa, Card, and split payment methods.",
@@ -75,12 +74,36 @@ const hardwareSections = [
 ];
 
 export default function SettingsPage() {
+  const { businessName, setBusinessName, vatRate, setVatRate } = useFlexpos();
+
+  const [nameDraft, setNameDraft] = useState(businessName);
+  const [vatDraft, setVatDraft] = useState(String(Math.round(vatRate * 100)));
+  const [saved, setSaved] = useState(false);
+
+  // Keep drafts in sync with the store (e.g. after localStorage hydration).
+  useEffect(() => {
+    setNameDraft(businessName);
+    setVatDraft(String(Math.round(vatRate * 100)));
+  }, [businessName, vatRate]);
+
+  function saveProfile() {
+    const cleanName = nameDraft.trim() || "FlexPOS";
+    const parsed = Number(vatDraft);
+    const cleanVat = Number.isFinite(parsed)
+      ? Math.min(100, Math.max(0, parsed))
+      : 0;
+
+    setBusinessName(cleanName);
+    setVatRate(cleanVat / 100);
+    setSaved(true);
+  }
+
   return (
     <FlexposPageShell
       title="Settings"
       description="Configure your multi-purpose POS for grocery, café, retail, pharmacy, salon, and service businesses."
       action={
-        <FlexposButton>
+        <FlexposButton onClick={saveProfile}>
           <span className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
             Save Settings
@@ -88,6 +111,67 @@ export default function SettingsPage() {
         </FlexposButton>
       }
     >
+      <FlexposCard className="mb-6 p-6">
+        <div className="flex items-start gap-3">
+          <div className="w-fit rounded-2xl bg-emerald-50 p-3 text-emerald-700">
+            <Building2 className="h-6 w-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-slate-950">
+              Business Profile
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Business name and VAT rate used across checkout and reports.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <label className="block">
+            <span className="mb-1 block text-xs font-bold text-slate-600">
+              Business name
+            </span>
+            <input
+              value={nameDraft}
+              onChange={(event) => {
+                setNameDraft(event.target.value);
+                setSaved(false);
+              }}
+              placeholder="e.g. Mama Grocers"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none focus:border-emerald-400"
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-xs font-bold text-slate-600">
+              VAT rate (%)
+            </span>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              value={vatDraft}
+              onChange={(event) => {
+                setVatDraft(event.target.value);
+                setSaved(false);
+              }}
+              placeholder="16"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none focus:border-emerald-400"
+            />
+          </label>
+        </div>
+
+        <div className="mt-5 flex items-center gap-3">
+          <FlexposButton onClick={saveProfile}>Save Profile</FlexposButton>
+          {saved ? (
+            <span className="flex items-center gap-2 text-sm font-bold text-emerald-700">
+              <CheckCircle2 className="h-4 w-4" />
+              Saved
+            </span>
+          ) : null}
+        </div>
+      </FlexposCard>
+
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {settingsSections.map((section) => {
           const Icon = section.icon;

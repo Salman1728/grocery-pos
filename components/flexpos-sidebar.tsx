@@ -13,6 +13,7 @@ import {
   ShoppingCart,
   Users,
 } from "lucide-react";
+import { useFlexpos } from "@/lib/flexpos-store";
 
 const navItems = [
   {
@@ -59,17 +60,19 @@ const navItems = [
 
 export function FlexposSidebar() {
   const pathname = usePathname();
+  const { businessName } = useFlexpos();
+  const brandInitial = businessName.trim().charAt(0).toUpperCase() || "F";
 
   return (
     <>
       <header className="sticky top-0 z-50 flex items-center justify-between border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur lg:hidden">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-600 text-lg font-black text-white">
-            F
+            {brandInitial}
           </div>
 
           <div>
-            <p className="text-base font-black text-slate-950">FlexPOS</p>
+            <p className="text-base font-black text-slate-950">{businessName}</p>
             <p className="text-xs font-semibold text-slate-500">
               Mobile cashier
             </p>
@@ -107,11 +110,13 @@ export function FlexposSidebar() {
       <aside className="fixed left-0 top-0 z-40 hidden h-screen w-72 flex-col bg-emerald-950 px-5 py-6 text-white lg:flex">
         <div className="mb-10 flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-xl font-black">
-            F
+            {brandInitial}
           </div>
 
           <div>
-            <h1 className="text-2xl font-black tracking-tight">FlexPOS</h1>
+            <h1 className="text-2xl font-black tracking-tight">
+              {businessName}
+            </h1>
             <p className="text-xs font-medium text-emerald-200">
               Commerce platform
             </p>
