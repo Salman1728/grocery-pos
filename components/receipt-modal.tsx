@@ -1,6 +1,6 @@
 "use client";
 
-import { Printer, X } from "lucide-react";
+import { Download, Printer, X } from "lucide-react";
 import type { Sale } from "@/lib/flexpos-store";
 
 type ReceiptModalProps = {
@@ -11,6 +11,71 @@ type ReceiptModalProps = {
 
 function money(value: number) {
   return `KES ${Math.round(value).toLocaleString()}`;
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>]/g, (c) =>
+    c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;"
+  );
+}
+
+// Builds a self-contained, print-ready HTML receipt (works as a download in any
+// environment, including sandboxed previews that block window.print()).
+function buildReceiptHtml(sale: Sale, businessName: string): string {
+  const itemRows =
+    sale.items.length === 0
+      ? `<div class="muted center">Itemized details not available.</div>`
+      : sale.items
+          .map(
+            (line) =>
+              `<div class="row"><span>${line.quantity} × ${escapeHtml(
+                line.name
+              )}</span><span>${money(line.price * line.quantity)}</span></div>`
+          )
+          .join("");
+
+  return `<!doctype html><html><head><meta charset="utf-8" />
+<title>Receipt ${sale.id}</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 24px; color: #0f172a; }
+  .r { max-width: 360px; margin: 0 auto; }
+  .center { text-align: center; }
+  .muted { color: #64748b; font-size: 12px; }
+  .row { display: flex; justify-content: space-between; margin: 4px 0; font-size: 14px; }
+  .divider { border-top: 1px dashed #cbd5e1; margin: 12px 0; }
+  .total { font-weight: 800; font-size: 16px; }
+  .green { color: #047857; }
+  h1 { font-size: 20px; margin: 0; }
+</style></head>
+<body><div class="r">
+  <div class="center"><h1>${escapeHtml(businessName)}</h1><div class="muted">Sale Receipt</div></div>
+  <div class="divider"></div>
+  <div class="row"><span class="muted">Receipt</span><span>${sale.id}</span></div>
+  <div class="row"><span class="muted">Time</span><span>${escapeHtml(sale.time)}</span></div>
+  <div class="row"><span class="muted">Customer</span><span>${escapeHtml(sale.customer)}</span></div>
+  <div class="row"><span class="muted">Mode</span><span>${sale.mode}</span></div>
+  <div class="divider"></div>
+  ${itemRows}
+  <div class="divider"></div>
+  <div class="row"><span class="muted">Subtotal</span><span>${money(sale.subtotal)}</span></div>
+  <div class="row"><span class="muted">VAT</span><span>${money(sale.vat)}</span></div>
+  <div class="row total"><span>Total</span><span class="green">${money(sale.total)}</span></div>
+  <div class="row"><span class="muted">Paid via</span><span>${sale.payment}</span></div>
+  <div class="center muted" style="margin-top:16px">Thank you for shopping with us</div>
+</div></body></html>`;
+}
+
+function downloadReceipt(sale: Sale, businessName: string): void {
+  const html = buildReceiptHtml(sale, businessName);
+  const blob = new Blob([html], { type: "text/html;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `receipt-${sale.id}.html`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 export function ReceiptModal({ sale, businessName, onClose }: ReceiptModalProps) {
@@ -95,11 +160,19 @@ export function ReceiptModal({ sale, businessName, onClose }: ReceiptModalProps)
           Thank you for shopping with us
         </p>
 
-        <div className="no-print mt-5 flex gap-3">
+        <div className="no-print mt-5 flex gap-2">
+          <button
+            type="button"
+            onClick={() => downloadReceipt(sale, businessName)}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-700"
+          >
+            <Download className="h-4 w-4" />
+            Download
+          </button>
           <button
             type="button"
             onClick={() => window.print()}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-700"
+            className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
           >
             <Printer className="h-4 w-4" />
             Print
