@@ -19,36 +19,68 @@ import { FlexposPageShell } from "@/components/flexpos-page-shell";
 import { FlexposCard } from "@/components/flexpos-card";
 import { FlexposButton } from "@/components/flexpos-button";
 
-const settingsSections = [
+type ToggleItem = { key: string; label: string };
+
+const settingsSections: {
+  title: string;
+  description: string;
+  icon: typeof CreditCard;
+  items: ToggleItem[];
+}[] = [
   {
     title: "Payments",
-    description: "Configure Cash, M-Pesa, Card, and split payment methods.",
+    description: "Enabled methods appear at checkout.",
     icon: CreditCard,
-    items: ["M-Pesa Till / Paybill", "Card terminal", "Cash drawer", "Split payments"],
+    items: [
+      { key: "pay.cash", label: "Cash" },
+      { key: "pay.mpesa", label: "M-Pesa" },
+      { key: "pay.card", label: "Card" },
+      { key: "pay.split", label: "Split payments" },
+    ],
   },
   {
     title: "Receipts",
-    description: "Receipt printing, PDF receipts, WhatsApp, and SMS settings.",
+    description: "Receipt channels offered to customers.",
     icon: ReceiptText,
-    items: ["Receipt template", "Printer setup", "WhatsApp receipts", "SMS receipts"],
-  },
-  {
-    title: "Users & Roles",
-    description: "Manage cashiers, managers, admins, and permissions.",
-    icon: Users,
-    items: ["Cashiers", "Managers", "Admin access", "Role permissions"],
-  },
-  {
-    title: "Security",
-    description: "PIN login, refunds approval, shift controls, and audit logs.",
-    icon: ShieldCheck,
-    items: ["PIN login", "Refund approval", "Audit logs", "Shift close rules"],
+    items: [
+      { key: "rcpt.print", label: "Print receipts" },
+      { key: "rcpt.whatsapp", label: "WhatsApp receipts" },
+      { key: "rcpt.sms", label: "SMS receipts" },
+      { key: "rcpt.email", label: "Email receipts" },
+    ],
   },
   {
     title: "Notifications",
-    description: "Low stock alerts, expiry alerts, sales summaries, and reminders.",
+    description: "Alerts shown around the app.",
     icon: Bell,
-    items: ["Low stock alerts", "Expiry alerts", "Daily reports", "Manager alerts"],
+    items: [
+      { key: "notif.lowstock", label: "Low stock alerts" },
+      { key: "notif.expiry", label: "Expiry alerts" },
+      { key: "notif.daily", label: "Daily summary email" },
+      { key: "notif.manager", label: "Manager alerts" },
+    ],
+  },
+  {
+    title: "Security",
+    description: "Login and approval controls.",
+    icon: ShieldCheck,
+    items: [
+      { key: "sec.pin", label: "Require PIN login" },
+      { key: "sec.refundapproval", label: "Approve refunds" },
+      { key: "sec.audit", label: "Audit logging" },
+      { key: "sec.autoshift", label: "Auto-close shift" },
+    ],
+  },
+  {
+    title: "Staff & Access",
+    description: "Cashier permissions and roles.",
+    icon: Users,
+    items: [
+      { key: "access.cashierrefunds", label: "Allow cashier refunds" },
+      { key: "access.managervoid", label: "Manager approval for voids" },
+      { key: "access.multilogin", label: "Multiple cashier logins" },
+      { key: "access.selfcheckout", label: "Self-checkout mode" },
+    ],
   },
 ];
 
@@ -74,7 +106,8 @@ const hardwareSections = [
 ];
 
 export default function SettingsPage() {
-  const { businessName, setBusinessName, vatRate, setVatRate } = useFlexpos();
+  const { businessName, setBusinessName, vatRate, setVatRate, settings, toggleSetting } =
+    useFlexpos();
 
   const [nameDraft, setNameDraft] = useState(businessName);
   const [vatDraft, setVatDraft] = useState(String(Math.round(vatRate * 100)));
@@ -190,19 +223,34 @@ export default function SettingsPage() {
               </p>
 
               <div className="mt-5 space-y-2">
-                {section.items.map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3"
-                  >
-                    <span className="text-sm font-bold text-slate-600">
-                      {item}
-                    </span>
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-500">
-                      Edit
-                    </span>
-                  </div>
-                ))}
+                {section.items.map((item) => {
+                  const on = settings[item.key];
+
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => toggleSetting(item.key)}
+                      aria-pressed={on}
+                      className="flex w-full items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-left transition hover:bg-slate-100"
+                    >
+                      <span className="text-sm font-bold text-slate-600">
+                        {item.label}
+                      </span>
+                      <span
+                        className={`relative h-6 w-11 shrink-0 rounded-full transition ${
+                          on ? "bg-emerald-600" : "bg-slate-300"
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${
+                            on ? "left-[1.375rem]" : "left-0.5"
+                          }`}
+                        />
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </FlexposCard>
           );

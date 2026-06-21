@@ -17,8 +17,9 @@ function slugify(value: string): string {
 }
 
 export default function CustomersPage() {
-  const { customers, addCustomer, selectedCustomer, selectCustomer } =
+  const { customers, addCustomer, selectedCustomer, selectCustomer, settings } =
     useFlexpos();
+  const whatsappEnabled = settings["rcpt.whatsapp"];
 
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -284,8 +285,13 @@ export default function CustomersPage() {
                 ))}
               </div>
 
-              <button className="mt-6 w-full rounded-2xl bg-emerald-600 px-5 py-4 text-sm font-black text-white shadow-sm">
-                Send WhatsApp Receipt
+              <button
+                disabled={!whatsappEnabled}
+                className="mt-6 w-full rounded-2xl bg-emerald-600 px-5 py-4 text-sm font-black text-white shadow-sm transition disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+              >
+                {whatsappEnabled
+                  ? "Send WhatsApp Receipt"
+                  : "WhatsApp receipts off"}
               </button>
             </>
           ) : (

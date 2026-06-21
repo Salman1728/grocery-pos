@@ -60,6 +60,43 @@ export const paymentMethods: PaymentMethod[] = [
   "Split",
 ];
 
+export const paymentSettingKey: Record<PaymentMethod, string> = {
+  Cash: "pay.cash",
+  "M-Pesa": "pay.mpesa",
+  Card: "pay.card",
+  Split: "pay.split",
+};
+
+export type AppSettings = Record<string, boolean>;
+
+export const defaultSettings: AppSettings = {
+  // Payments — drive which methods appear at checkout.
+  "pay.cash": true,
+  "pay.mpesa": true,
+  "pay.card": true,
+  "pay.split": true,
+  // Receipts — "rcpt.whatsapp" gates the WhatsApp button on customer profiles.
+  "rcpt.print": true,
+  "rcpt.whatsapp": true,
+  "rcpt.sms": false,
+  "rcpt.email": false,
+  // Notifications — "notif.lowstock" drives the dashboard low-stock banner.
+  "notif.lowstock": true,
+  "notif.expiry": true,
+  "notif.daily": false,
+  "notif.manager": true,
+  // Security — saved preferences.
+  "sec.pin": true,
+  "sec.refundapproval": true,
+  "sec.audit": true,
+  "sec.autoshift": false,
+  // Staff & access — saved preferences.
+  "access.cashierrefunds": false,
+  "access.managervoid": true,
+  "access.multilogin": true,
+  "access.selfcheckout": false,
+};
+
 export const categories = [
   "All",
   "Popular",

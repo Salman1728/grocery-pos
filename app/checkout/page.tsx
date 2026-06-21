@@ -4,6 +4,8 @@ import { useMemo, useRef, useState } from "react";
 import { Search, ScanLine, Plus, CheckCircle2, X } from "lucide-react";
 import {
   categories,
+  paymentMethods,
+  paymentSettingKey,
   type CatalogItem,
   type PaymentMethod,
 } from "@/lib/flexpos-data";
@@ -40,8 +42,16 @@ export default function CheckoutPage() {
     selectCustomer,
     businessMode,
     setBusinessMode,
+    settings,
     recordSale,
   } = useFlexpos();
+
+  const enabledPaymentMethods = paymentMethods.filter(
+    (method) => settings[paymentSettingKey[method]]
+  );
+  // Never leave checkout with zero ways to pay.
+  const paymentOptions =
+    enabledPaymentMethods.length > 0 ? enabledPaymentMethods : paymentMethods;
 
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
@@ -309,6 +319,7 @@ export default function CheckoutPage() {
             onRemove={removeFromCart}
           />
           <PaymentButtons
+            methods={paymentOptions}
             selected={payment}
             onSelect={setPayment}
             onComplete={completeSale}

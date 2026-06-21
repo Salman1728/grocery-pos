@@ -12,6 +12,8 @@ import {
 import {
   catalogItems,
   customers as seedCustomers,
+  defaultSettings,
+  type AppSettings,
   type BusinessMode,
   type CartItem,
   type CatalogItem,
@@ -117,6 +119,8 @@ type FlexposContextValue = {
   setVatRate: (rate: number) => void;
   businessName: string;
   setBusinessName: (name: string) => void;
+  settings: AppSettings;
+  toggleSetting: (key: string) => void;
   sales: Sale[];
   recordSale: (
     payment: PaymentMethod,
@@ -167,6 +171,7 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
   const [businessName, setBusinessName] = useState<string>(
     DEFAULT_BUSINESS_NAME
   );
+  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
 
   const selectedCustomer =
     customers.find((customer) => customer.id === selectedCustomerId) ?? null;
@@ -189,6 +194,7 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
           businessMode?: BusinessMode;
           vatRate?: number;
           businessName?: string;
+          settings?: AppSettings;
         };
         if (Array.isArray(saved.catalog)) setCatalog(saved.catalog);
         if (Array.isArray(saved.cart)) setCart(saved.cart);
@@ -201,6 +207,10 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
         if (typeof saved.vatRate === "number") setVatRate(saved.vatRate);
         if (typeof saved.businessName === "string") {
           setBusinessName(saved.businessName);
+        }
+        if (saved.settings) {
+          // Merge so newly-added keys keep their defaults.
+          setSettings({ ...defaultSettings, ...saved.settings });
         }
       }
     } catch {
@@ -227,6 +237,7 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
           businessMode,
           vatRate,
           businessName,
+          settings,
         })
       );
     } catch {
@@ -241,6 +252,7 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
     businessMode,
     vatRate,
     businessName,
+    settings,
   ]);
 
   const cartSubtotal = useMemo(
@@ -304,6 +316,10 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
 
   function clearCart() {
     setCart([]);
+  }
+
+  function toggleSetting(key: string) {
+    setSettings((current) => ({ ...current, [key]: !current[key] }));
   }
 
   function addCustomer(customer: Customer) {
@@ -391,6 +407,8 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
     setVatRate,
     businessName,
     setBusinessName,
+    settings,
+    toggleSetting,
     sales,
     recordSale,
     salesSummary,

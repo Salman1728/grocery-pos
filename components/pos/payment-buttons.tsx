@@ -1,8 +1,9 @@
 "use client";
 
-import { PaymentMethod, paymentMethods } from "@/lib/flexpos-data";
+import { PaymentMethod } from "@/lib/flexpos-data";
 
 type PaymentButtonsProps = {
+  methods: PaymentMethod[];
   selected: PaymentMethod | null;
   onSelect: (method: PaymentMethod) => void;
   onComplete: () => void;
@@ -17,6 +18,7 @@ const methodColor: Record<PaymentMethod, string> = {
 };
 
 export function PaymentButtons({
+  methods,
   selected,
   onSelect,
   onComplete,
@@ -24,7 +26,7 @@ export function PaymentButtons({
 }: PaymentButtonsProps) {
   return (
     <div className="grid grid-cols-2 gap-3">
-      {paymentMethods.map((method) => {
+      {methods.map((method) => {
         const isActive = selected === method;
 
         return (

@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, Boxes, CreditCard, ReceiptText } from "lucide-react";
+import {
+  AlertTriangle,
+  BarChart3,
+  Boxes,
+  CreditCard,
+  ReceiptText,
+} from "lucide-react";
 import { businessModes, isLowStock } from "@/lib/flexpos-data";
 import { useFlexpos } from "@/lib/flexpos-store";
 import { FlexposPageShell } from "@/components/flexpos-page-shell";
@@ -36,8 +42,9 @@ const quickActions = [
 ];
 
 export default function DashboardPage() {
-  const { sales, salesSummary, catalog } = useFlexpos();
+  const { sales, salesSummary, catalog, settings } = useFlexpos();
   const lowStockCount = catalog.filter(isLowStock).length;
+  const showLowStockAlert = settings["notif.lowstock"] && lowStockCount > 0;
 
   const businessMix = businessModes.map((mode) => {
     const total = sales
@@ -86,6 +93,16 @@ export default function DashboardPage() {
         </Link>
       }
     >
+      {showLowStockAlert ? (
+        <div className="mb-6 flex items-center gap-3 rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-800">
+          <AlertTriangle className="h-5 w-5 shrink-0" />
+          <p className="text-sm font-bold">
+            {lowStockCount} item{lowStockCount === 1 ? "" : "s"} low on stock —
+            review inventory and reorder.
+          </p>
+        </div>
+      ) : null}
+
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {dashboardStats.map((stat, index) => {
           const icons = [ReceiptText, CreditCard, Boxes, BarChart3];
