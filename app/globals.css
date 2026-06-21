@@ -128,3 +128,23 @@
     @apply font-sans;
   }
 }
+
+/* Print only the receipt when the print dialog is invoked. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .receipt-print,
+  .receipt-print * {
+    visibility: visible;
+  }
+  .receipt-print {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    box-shadow: none;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

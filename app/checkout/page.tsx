@@ -9,7 +9,8 @@ import {
   type CatalogItem,
   type PaymentMethod,
 } from "@/lib/flexpos-data";
-import { useFlexpos } from "@/lib/flexpos-store";
+import { useFlexpos, type Sale } from "@/lib/flexpos-store";
+import { ReceiptModal } from "@/components/receipt-modal";
 import { BusinessModeSwitcher } from "@/components/pos/business-mode-switcher";
 import { ItemCard } from "@/components/pos/item-card";
 import { CartPanel } from "@/components/pos/cart-panel";
@@ -43,6 +44,7 @@ export default function CheckoutPage() {
     businessMode,
     setBusinessMode,
     settings,
+    businessName,
     recordSale,
   } = useFlexpos();
 
@@ -62,6 +64,7 @@ export default function CheckoutPage() {
   const [showCustom, setShowCustom] = useState(false);
   const [customName, setCustomName] = useState("");
   const [customPrice, setCustomPrice] = useState("");
+  const [receiptSale, setReceiptSale] = useState<Sale | null>(null);
 
   const filteredItems = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -143,6 +146,7 @@ export default function CheckoutPage() {
     if (!sale) return;
 
     setPayment(null);
+    setReceiptSale(sale);
     setNotice({
       tone: "success",
       text: `Sale ${sale.id} completed · ${money(sale.total)} paid via ${
@@ -168,6 +172,14 @@ export default function CheckoutPage() {
         </div>
       }
     >
+      {receiptSale ? (
+        <ReceiptModal
+          sale={receiptSale}
+          businessName={businessName}
+          onClose={() => setReceiptSale(null)}
+        />
+      ) : null}
+
       {notice ? (
         <div
           className={`mb-6 flex items-center justify-between gap-3 rounded-3xl border px-5 py-4 ${

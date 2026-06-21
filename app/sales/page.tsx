@@ -8,8 +8,9 @@ import {
   RefreshCw,
   Search,
 } from "lucide-react";
-import { useFlexpos } from "@/lib/flexpos-store";
+import { useFlexpos, type Sale } from "@/lib/flexpos-store";
 import { downloadCsv } from "@/lib/export";
+import { ReceiptModal } from "@/components/receipt-modal";
 import { FlexposPageShell } from "@/components/flexpos-page-shell";
 import { FlexposCard } from "@/components/flexpos-card";
 import { FlexposButton } from "@/components/flexpos-button";
@@ -19,8 +20,9 @@ function money(value: number) {
 }
 
 export default function SalesPage() {
-  const { sales, salesSummary } = useFlexpos();
+  const { sales, salesSummary, businessName } = useFlexpos();
   const [search, setSearch] = useState("");
+  const [receiptSale, setReceiptSale] = useState<Sale | null>(null);
 
   const salesStats: [string, string, string][] = [
     ["Gross Sales", money(salesSummary.gross), "All recorded sales"],
@@ -134,9 +136,12 @@ export default function SalesPage() {
           </div>
         ) : (
           filteredSales.map((sale) => (
-            <div
+            <button
               key={sale.id}
-              className="grid grid-cols-[0.8fr_1.1fr_0.9fr_0.8fr_0.8fr_0.8fr_1fr] items-center border-b border-slate-100 px-6 py-5 text-sm last:border-b-0"
+              type="button"
+              onClick={() => setReceiptSale(sale)}
+              title="View receipt"
+              className="grid w-full grid-cols-[0.8fr_1.1fr_0.9fr_0.8fr_0.8fr_0.8fr_1fr] items-center border-b border-slate-100 px-6 py-5 text-left text-sm transition hover:bg-slate-50 last:border-b-0"
             >
               <span className="font-black text-slate-950">{sale.id}</span>
               <span className="font-bold text-slate-600">{sale.customer}</span>
@@ -149,10 +154,18 @@ export default function SalesPage() {
                 Completed
               </span>
               <span className="font-bold text-slate-500">{sale.time}</span>
-            </div>
+            </button>
           ))
         )}
       </FlexposCard>
+
+      {receiptSale ? (
+        <ReceiptModal
+          sale={receiptSale}
+          businessName={businessName}
+          onClose={() => setReceiptSale(null)}
+        />
+      ) : null}
     </FlexposPageShell>
   );
 }
