@@ -90,6 +90,16 @@ const seedSales: Sale[] = [
   },
 ];
 
+export type HeldSale = {
+  id: string;
+  items: CartItem[];
+  customerId: string | null;
+  mode: BusinessMode;
+  total: number;
+  count: number;
+  time: string;
+};
+
 export type SalesSummary = {
   gross: number;
   count: number;
@@ -105,6 +115,10 @@ type FlexposContextValue = {
   changeQuantity: (id: string, delta: number) => void;
   removeFromCart: (id: string) => void;
   clearCart: () => void;
+  heldSales: HeldSale[];
+  holdCurrentSale: () => HeldSale | null;
+  resumeHeldSale: (id: string) => void;
+  discardHeldSale: (id: string) => void;
   cartSubtotal: number;
   cartVat: number;
   cartTotal: number;
@@ -172,6 +186,7 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
     DEFAULT_BUSINESS_NAME
   );
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  const [heldSales, setHeldSales] = useState<HeldSale[]>([]);
 
   const selectedCustomer =
     customers.find((customer) => customer.id === selectedCustomerId) ?? null;
@@ -195,6 +210,7 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
           vatRate?: number;
           businessName?: string;
           settings?: AppSettings;
+          heldSales?: HeldSale[];
         };
         if (Array.isArray(saved.catalog)) setCatalog(saved.catalog);
         if (Array.isArray(saved.cart)) setCart(saved.cart);
@@ -212,6 +228,7 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
           // Merge so newly-added keys keep their defaults.
           setSettings({ ...defaultSettings, ...saved.settings });
         }
+        if (Array.isArray(saved.heldSales)) setHeldSales(saved.heldSales);
       }
     } catch {
       // Corrupt or unavailable storage — fall back to seed state.
@@ -238,6 +255,7 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
           vatRate,
           businessName,
           settings,
+          heldSales,
         })
       );
     } catch {
@@ -253,6 +271,7 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
     vatRate,
     businessName,
     settings,
+    heldSales,
   ]);
 
   const cartSubtotal = useMemo(
@@ -316,6 +335,39 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
 
   function clearCart() {
     setCart([]);
+  }
+
+  function holdCurrentSale(): HeldSale | null {
+    if (cart.length === 0) return null;
+
+    const held: HeldSale = {
+      id: `HOLD-${Date.now()}`,
+      items: cart,
+      customerId: selectedCustomerId,
+      mode: businessMode,
+      total: cartTotal,
+      count: cart.reduce((sum, item) => sum + item.quantity, 0),
+      time: formatNow(),
+    };
+
+    setHeldSales((current) => [held, ...current]);
+    clearCart();
+    setSelectedCustomerId(null);
+    return held;
+  }
+
+  function resumeHeldSale(id: string) {
+    const held = heldSales.find((entry) => entry.id === id);
+    if (!held) return;
+
+    setCart(held.items);
+    setSelectedCustomerId(held.customerId);
+    setBusinessMode(held.mode);
+    setHeldSales((current) => current.filter((entry) => entry.id !== id));
+  }
+
+  function discardHeldSale(id: string) {
+    setHeldSales((current) => current.filter((entry) => entry.id !== id));
   }
 
   function toggleSetting(key: string) {
@@ -393,6 +445,10 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
     changeQuantity,
     removeFromCart,
     clearCart,
+    heldSales,
+    holdCurrentSale,
+    resumeHeldSale,
+    discardHeldSale,
     cartSubtotal,
     cartVat,
     cartTotal,

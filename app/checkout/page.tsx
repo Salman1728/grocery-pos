@@ -35,6 +35,10 @@ export default function CheckoutPage() {
     changeQuantity,
     removeFromCart,
     clearCart,
+    heldSales,
+    holdCurrentSale,
+    resumeHeldSale,
+    discardHeldSale,
     cartSubtotal,
     cartVat,
     cartTotal,
@@ -124,19 +128,21 @@ export default function CheckoutPage() {
   }
 
   function holdSale() {
-    if (cart.length === 0) return;
+    const held = holdCurrentSale();
+    if (!held) return;
 
-    const heldTotal = cartTotal;
-    const heldCount = cart.length;
-
-    clearCart();
     setPayment(null);
     setNotice({
       tone: "info",
-      text: `Sale held · ${money(heldTotal)} (${heldCount} item${
-        heldCount > 1 ? "s" : ""
+      text: `Sale held · ${money(held.total)} (${held.count} item${
+        held.count > 1 ? "s" : ""
       })`,
     });
+  }
+
+  function resume(id: string) {
+    resumeHeldSale(id);
+    setNotice(null);
   }
 
   function completeSale() {
@@ -269,6 +275,46 @@ export default function CheckoutPage() {
                 <FlexposButton onClick={addCustomItem} disabled={!canAddCustom}>
                   Add to Cart
                 </FlexposButton>
+              </div>
+            </div>
+          ) : null}
+
+          {heldSales.length > 0 ? (
+            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="mb-3 text-sm font-bold text-slate-950">
+                Held sales ({heldSales.length})
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {heldSales.map((held) => (
+                  <div
+                    key={held.id}
+                    className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2"
+                  >
+                    <div>
+                      <p className="text-xs font-black text-slate-950">
+                        {money(held.total)}
+                      </p>
+                      <p className="text-[11px] font-medium text-slate-500">
+                        {held.count} item{held.count > 1 ? "s" : ""} · {held.time}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => resume(held.id)}
+                      className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-black text-white transition hover:bg-emerald-700"
+                    >
+                      Resume
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Discard held sale"
+                      onClick={() => discardHeldSale(held.id)}
+                      className="rounded-xl border border-slate-200 bg-white p-1.5 text-slate-400 transition hover:border-red-200 hover:text-red-500"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           ) : null}
