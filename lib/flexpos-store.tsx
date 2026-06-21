@@ -27,6 +27,7 @@ const DEFAULT_BUSINESS_NAME = "FlexPOS";
 export type Sale = {
   id: string;
   customer: string;
+  customerId: string | null;
   channel: string;
   mode: BusinessMode;
   payment: PaymentMethod;
@@ -35,6 +36,7 @@ export type Sale = {
   vat: number;
   total: number;
   time: string;
+  refunded: boolean;
 };
 
 // Seeded history so the Sales and Dashboard screens are populated before any
@@ -43,6 +45,7 @@ const seedSales: Sale[] = [
   {
     id: "SALE-1001",
     customer: "Walk-in Customer",
+    customerId: null,
     channel: "Checkout",
     mode: "Grocery",
     payment: "M-Pesa",
@@ -51,10 +54,12 @@ const seedSales: Sale[] = [
     vat: 290,
     total: 2100,
     time: "Today, 10:42 AM",
+    refunded: false,
   },
   {
     id: "SALE-1002",
     customer: "Amina Ali",
+    customerId: "amina-ali",
     channel: "Checkout",
     mode: "Grocery",
     payment: "Cash",
@@ -63,10 +68,12 @@ const seedSales: Sale[] = [
     vat: 116,
     total: 840,
     time: "Today, 11:18 AM",
+    refunded: false,
   },
   {
     id: "SALE-1003",
     customer: "John Mwangi",
+    customerId: "john-mwangi",
     channel: "Cafe Order",
     mode: "Cafe",
     payment: "Card",
@@ -75,10 +82,12 @@ const seedSales: Sale[] = [
     vat: 200,
     total: 1450,
     time: "Today, 12:05 PM",
+    refunded: false,
   },
   {
     id: "SALE-1004",
     customer: "Walk-in Customer",
+    customerId: null,
     channel: "Retail",
     mode: "Retail",
     payment: "Split",
@@ -87,6 +96,7 @@ const seedSales: Sale[] = [
     vat: 448,
     total: 3250,
     time: "Today, 1:22 PM",
+    refunded: false,
   },
 ];
 
@@ -105,6 +115,8 @@ export type SalesSummary = {
   count: number;
   average: number;
   mpesa: number;
+  refunds: number;
+  refundsCount: number;
 };
 
 type FlexposContextValue = {
@@ -141,6 +153,7 @@ type FlexposContextValue = {
     customer?: string,
     channel?: string
   ) => Sale | null;
+  refundSale: (id: string) => void;
   salesSummary: SalesSummary;
 };
 
@@ -282,9 +295,12 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
   const cartTotal = cartSubtotal + cartVat;
 
   const salesSummary = useMemo<SalesSummary>(() => {
-    const gross = sales.reduce((sum, sale) => sum + sale.total, 0);
-    const count = sales.length;
-    const mpesa = sales
+    const active = sales.filter((sale) => !sale.refunded);
+    const refundedSales = sales.filter((sale) => sale.refunded);
+
+    const gross = active.reduce((sum, sale) => sum + sale.total, 0);
+    const count = active.length;
+    const mpesa = active
       .filter((sale) => sale.payment === "M-Pesa")
       .reduce((sum, sale) => sum + sale.total, 0);
 
@@ -293,6 +309,8 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
       count,
       average: count > 0 ? Math.round(gross / count) : 0,
       mpesa,
+      refunds: refundedSales.reduce((sum, sale) => sum + sale.total, 0),
+      refundsCount: refundedSales.length,
     };
   }, [sales]);
 
@@ -394,6 +412,7 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
     const sale: Sale = {
       id: `SALE-${1000 + sales.length + 1}`,
       customer: buyer,
+      customerId: selectedCustomerId,
       channel,
       mode: businessMode,
       payment,
@@ -402,6 +421,7 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
       vat: cartVat,
       total: cartTotal,
       time: formatNow(),
+      refunded: false,
     };
 
     setSales((current) => [sale, ...current]);
@@ -437,6 +457,46 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
     return sale;
   }
 
+  function refundSale(id: string) {
+    const sale = sales.find((entry) => entry.id === id);
+    if (!sale || sale.refunded) return;
+
+    setSales((current) =>
+      current.map((entry) =>
+        entry.id === id ? { ...entry, refunded: true } : entry
+      )
+    );
+
+    // Restock the tracked items that were sold.
+    if (sale.items.length > 0) {
+      setCatalog((current) =>
+        current.map((item) => {
+          if (item.stock === null) return item;
+          const line = sale.items.find((entry) => entry.id === item.id);
+          return line ? { ...item, stock: item.stock + line.quantity } : item;
+        })
+      );
+    }
+
+    // Reverse the loyalty points and spend credited to the customer.
+    if (sale.customerId) {
+      const earned = pointsEarned(sale.total);
+      setCustomers((current) =>
+        current.map((customer) =>
+          customer.id === sale.customerId
+            ? {
+                ...customer,
+                points: Math.max(0, customer.points - earned),
+                spend: formatKes(
+                  Math.max(0, parseKes(customer.spend) - sale.total)
+                ),
+              }
+            : customer
+        )
+      );
+    }
+  }
+
   const value: FlexposContextValue = {
     catalog,
     addCatalogItem,
@@ -467,6 +527,7 @@ export function FlexposProvider({ children }: { children: ReactNode }) {
     toggleSetting,
     sales,
     recordSale,
+    refundSale,
     salesSummary,
   };
 

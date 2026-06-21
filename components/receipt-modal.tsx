@@ -1,12 +1,13 @@
 "use client";
 
-import { Download, Printer, X } from "lucide-react";
+import { Download, Printer, RotateCcw, X } from "lucide-react";
 import type { Sale } from "@/lib/flexpos-store";
 
 type ReceiptModalProps = {
   sale: Sale;
   businessName: string;
   onClose: () => void;
+  onRefund?: (id: string) => void;
 };
 
 function money(value: number) {
@@ -48,7 +49,11 @@ function buildReceiptHtml(sale: Sale, businessName: string): string {
   h1 { font-size: 20px; margin: 0; }
 </style></head>
 <body><div class="r">
-  <div class="center"><h1>${escapeHtml(businessName)}</h1><div class="muted">Sale Receipt</div></div>
+  <div class="center"><h1>${escapeHtml(businessName)}</h1><div class="muted">Sale Receipt</div>${
+    sale.refunded
+      ? '<div style="color:#dc2626;font-weight:800;margin-top:4px">REFUNDED</div>'
+      : ""
+  }</div>
   <div class="divider"></div>
   <div class="row"><span class="muted">Receipt</span><span>${sale.id}</span></div>
   <div class="row"><span class="muted">Time</span><span>${escapeHtml(sale.time)}</span></div>
@@ -78,7 +83,12 @@ function downloadReceipt(sale: Sale, businessName: string): void {
   URL.revokeObjectURL(url);
 }
 
-export function ReceiptModal({ sale, businessName, onClose }: ReceiptModalProps) {
+export function ReceiptModal({
+  sale,
+  businessName,
+  onClose,
+  onRefund,
+}: ReceiptModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4"
@@ -91,6 +101,11 @@ export function ReceiptModal({ sale, businessName, onClose }: ReceiptModalProps)
         <div className="text-center">
           <h2 className="text-xl font-black text-slate-950">{businessName}</h2>
           <p className="text-xs font-semibold text-slate-500">Sale Receipt</p>
+          {sale.refunded ? (
+            <span className="mt-2 inline-block rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-600">
+              REFUNDED
+            </span>
+          ) : null}
         </div>
 
         <div className="mt-4 space-y-1 border-y border-dashed border-slate-200 py-3 text-xs font-semibold text-slate-500">
@@ -186,6 +201,17 @@ export function ReceiptModal({ sale, businessName, onClose }: ReceiptModalProps)
             Close
           </button>
         </div>
+
+        {onRefund && !sale.refunded ? (
+          <button
+            type="button"
+            onClick={() => onRefund(sale.id)}
+            className="no-print mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 px-4 py-3 text-sm font-black text-red-600 transition hover:bg-red-50"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Refund Sale
+          </button>
+        ) : null}
       </div>
     </div>
   );

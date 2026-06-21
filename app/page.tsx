@@ -48,7 +48,7 @@ export default function DashboardPage() {
 
   const businessMix = businessModes.map((mode) => {
     const total = sales
-      .filter((sale) => sale.mode === mode)
+      .filter((sale) => !sale.refunded && sale.mode === mode)
       .reduce((sum, sale) => sum + sale.total, 0);
     const share =
       salesSummary.gross > 0

@@ -28,15 +28,18 @@ function money(value: number) {
 export default function ReportsPage() {
   const { sales, salesSummary, catalog } = useFlexpos();
 
-  const vatCollected = sales.reduce((sum, sale) => sum + sale.vat, 0);
-  const netSales = sales.reduce((sum, sale) => sum + sale.subtotal, 0);
+  // Reports reflect active (non-refunded) sales.
+  const activeSales = sales.filter((sale) => !sale.refunded);
+
+  const vatCollected = activeSales.reduce((sum, sale) => sum + sale.vat, 0);
+  const netSales = activeSales.reduce((sum, sale) => sum + sale.subtotal, 0);
   const inventoryValue = catalog.reduce(
     (sum, item) => sum + item.price * (stockCount(item) ?? 0),
     0
   );
 
   const byMethod = paymentMethods.map((method) => {
-    const total = sales
+    const total = activeSales
       .filter((sale) => sale.payment === method)
       .reduce((sum, sale) => sum + sale.total, 0);
     const share =
@@ -56,7 +59,7 @@ export default function ReportsPage() {
     string,
     { name: string; qty: number; revenue: number }
   >();
-  sales.forEach((sale) => {
+  activeSales.forEach((sale) => {
     sale.items.forEach((line) => {
       const entry = productTotals.get(line.name) ?? {
         name: line.name,
@@ -115,7 +118,7 @@ export default function ReportsPage() {
     ["Gross Sales", money(salesSummary.gross)],
     ["Net Sales", money(netSales)],
     ["VAT Collected", money(vatCollected)],
-    ["M-Pesa Collected", money(salesSummary.mpesa)],
+    ["Refunds", money(salesSummary.refunds)],
   ];
 
   function exportSalesCsv() {
@@ -140,6 +143,7 @@ export default function ReportsPage() {
       ["Net Sales", netSales],
       ["VAT Collected", vatCollected],
       ["M-Pesa Collected", salesSummary.mpesa],
+      ["Refunds", salesSummary.refunds],
       ["Transactions", salesSummary.count],
       ...byMethod.map((row) => [`${row.method} total`, row.total]),
     ];

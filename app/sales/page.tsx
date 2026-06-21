@@ -20,7 +20,7 @@ function money(value: number) {
 }
 
 export default function SalesPage() {
-  const { sales, salesSummary, businessName } = useFlexpos();
+  const { sales, salesSummary, businessName, refundSale } = useFlexpos();
   const [search, setSearch] = useState("");
   const [receiptSale, setReceiptSale] = useState<Sale | null>(null);
 
@@ -150,8 +150,14 @@ export default function SalesPage() {
               <span className="font-black text-emerald-700">
                 {money(sale.total)}
               </span>
-              <span className="w-fit rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
-                Completed
+              <span
+                className={`w-fit rounded-full px-3 py-1 text-xs font-black ${
+                  sale.refunded
+                    ? "bg-red-50 text-red-600"
+                    : "bg-emerald-50 text-emerald-700"
+                }`}
+              >
+                {sale.refunded ? "Refunded" : "Completed"}
               </span>
               <span className="font-bold text-slate-500">{sale.time}</span>
             </button>
@@ -164,6 +170,10 @@ export default function SalesPage() {
           sale={receiptSale}
           businessName={businessName}
           onClose={() => setReceiptSale(null)}
+          onRefund={(id) => {
+            refundSale(id);
+            setReceiptSale(null);
+          }}
         />
       ) : null}
     </FlexposPageShell>
