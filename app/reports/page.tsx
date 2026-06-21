@@ -16,6 +16,7 @@ import {
   type PaymentMethod,
 } from "@/lib/flexpos-data";
 import { useFlexpos } from "@/lib/flexpos-store";
+import { downloadCsv } from "@/lib/export";
 import { FlexposPageShell } from "@/components/flexpos-page-shell";
 import { FlexposCard } from "@/components/flexpos-card";
 import { FlexposButton } from "@/components/flexpos-button";
@@ -96,12 +97,44 @@ export default function ReportsPage() {
     ["M-Pesa Collected", money(salesSummary.mpesa)],
   ];
 
+  function exportSalesCsv() {
+    downloadCsv(
+      "flexpos-sales.csv",
+      ["Sale ID", "Time", "Customer", "Channel", "Mode", "Payment", "Total"],
+      sales.map((sale) => [
+        sale.id,
+        sale.time,
+        sale.customer,
+        sale.channel,
+        sale.mode,
+        sale.payment,
+        sale.total,
+      ])
+    );
+  }
+
+  function exportSummaryCsv() {
+    const rows: (string | number)[][] = [
+      ["Gross Sales", salesSummary.gross],
+      ["Net Sales", netSales],
+      ["VAT Collected", vatCollected],
+      ["M-Pesa Collected", salesSummary.mpesa],
+      ["Transactions", salesSummary.count],
+      ...byMethod.map((row) => [`${row.method} total`, row.total]),
+    ];
+    downloadCsv("flexpos-summary.csv", ["Metric", "Value (KES)"], rows);
+  }
+
+  function printSummary() {
+    window.print();
+  }
+
   return (
     <FlexposPageShell
       title="Reports & Analytics"
       description="Analyze sales, inventory, payments, staff performance, taxes, products, and business growth."
       action={
-        <FlexposButton>
+        <FlexposButton onClick={exportSalesCsv}>
           <span className="flex items-center gap-2">
             <Download className="h-5 w-5" />
             Export Reports
@@ -180,14 +213,16 @@ export default function ReportsPage() {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <FlexposButton variant="secondary">
+            <FlexposButton variant="secondary" onClick={exportSummaryCsv}>
               <span className="flex items-center gap-2">
                 <FileSpreadsheet className="h-5 w-5" />
                 Excel
               </span>
             </FlexposButton>
 
-            <FlexposButton variant="dark">PDF Summary</FlexposButton>
+            <FlexposButton variant="dark" onClick={printSummary}>
+              PDF Summary
+            </FlexposButton>
           </div>
         </div>
 

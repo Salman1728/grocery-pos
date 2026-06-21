@@ -9,6 +9,7 @@ import {
   Search,
 } from "lucide-react";
 import { useFlexpos } from "@/lib/flexpos-store";
+import { downloadCsv } from "@/lib/export";
 import { FlexposPageShell } from "@/components/flexpos-page-shell";
 import { FlexposCard } from "@/components/flexpos-card";
 import { FlexposButton } from "@/components/flexpos-button";
@@ -40,6 +41,22 @@ export default function SalesPage() {
     );
   }, [sales, search]);
 
+  function exportSales() {
+    downloadCsv(
+      "flexpos-sales.csv",
+      ["Sale ID", "Time", "Customer", "Channel", "Mode", "Payment", "Total"],
+      filteredSales.map((sale) => [
+        sale.id,
+        sale.time,
+        sale.customer,
+        sale.channel,
+        sale.mode,
+        sale.payment,
+        sale.total,
+      ])
+    );
+  }
+
   return (
     <FlexposPageShell
       title="Sales History"
@@ -53,7 +70,7 @@ export default function SalesPage() {
             </span>
           </FlexposButton>
 
-          <FlexposButton>
+          <FlexposButton onClick={exportSales}>
             <span className="flex items-center gap-2">
               <Download className="h-5 w-5" />
               Export
