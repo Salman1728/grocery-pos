@@ -51,6 +51,27 @@ export default function ReportsPage() {
     { method: "Cash", total: 0 }
   );
 
+  // Best sellers — aggregated from recorded sale line items (accumulates live).
+  const productTotals = new Map<
+    string,
+    { name: string; qty: number; revenue: number }
+  >();
+  sales.forEach((sale) => {
+    sale.items.forEach((line) => {
+      const entry = productTotals.get(line.name) ?? {
+        name: line.name,
+        qty: 0,
+        revenue: 0,
+      };
+      entry.qty += line.quantity;
+      entry.revenue += line.price * line.quantity;
+      productTotals.set(line.name, entry);
+    });
+  });
+  const topProducts = [...productTotals.values()]
+    .sort((a, b) => b.qty - a.qty)
+    .slice(0, 5);
+
   const reportCards = [
     {
       title: "Sales Report",
@@ -171,6 +192,42 @@ export default function ReportsPage() {
           );
         })}
       </section>
+
+      <FlexposCard className="mt-6 p-6">
+        <h2 className="text-2xl font-black text-slate-950">Top Products</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Best sellers by quantity, from recorded sales.
+        </p>
+
+        {topProducts.length === 0 ? (
+          <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+            <p className="text-sm font-bold text-slate-600">No products sold yet</p>
+            <p className="mt-1 text-xs text-slate-400">
+              Best sellers appear here as you record sales at checkout.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200">
+            <div className="grid grid-cols-[2fr_0.8fr_1fr] bg-slate-50 px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+              <span>Product</span>
+              <span>Qty sold</span>
+              <span>Revenue</span>
+            </div>
+            {topProducts.map((product) => (
+              <div
+                key={product.name}
+                className="grid grid-cols-[2fr_0.8fr_1fr] items-center border-t border-slate-100 px-5 py-4 text-sm"
+              >
+                <span className="font-bold text-slate-950">{product.name}</span>
+                <span className="font-bold text-slate-600">{product.qty}</span>
+                <span className="font-black text-emerald-700">
+                  {money(product.revenue)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </FlexposCard>
 
       <FlexposCard className="mt-6 p-6">
         <h2 className="text-2xl font-black text-slate-950">Payments by Method</h2>
